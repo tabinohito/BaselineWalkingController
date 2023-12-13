@@ -14,6 +14,10 @@ add_fsm_state(TeleopState TeleopState.cpp)
 target_link_libraries(TeleopState PUBLIC
   ${CONTROLLER_NAME})
 
+add_fsm_state(StepState StepState.cpp)
+target_link_libraries(StepState PUBLIC
+  ${CONTROLLER_NAME})
+
 find_package(baseline_footstep_planner QUIET)
 if(${baseline_footstep_planner_FOUND})
   message("-- Build FootstepPlannerState as baseline_footstep_planner found")
@@ -30,6 +34,8 @@ if(${baseline_footstep_planner_FOUND})
   else()
     target_link_libraries(FootstepPlannerState PUBLIC baseline_footstep_planner::BaselineFootstepPlanner ${CONTROLLER_NAME})
   endif()
+  file(WRITE "${PROJECT_BINARY_DIR}/generated/FootstepPlannerConfig.cmake" "set(baseline_walking_controller_FootstepPlanner_FOUND TRUE)")
+  install(FILES "${PROJECT_BINARY_DIR}/generated/FootstepPlannerConfig.cmake" DESTINATION "${CONFIG_INSTALL_DIR}")
 else()
   message("-- Not build FootstepPlannerState as baseline_footstep_planner not found")
 endif()

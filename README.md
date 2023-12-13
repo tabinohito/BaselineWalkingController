@@ -33,6 +33,9 @@ $ sudo apt-get update
 $ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 ```
 
+To enable GPUs in Docker (i.e., enable the `--gpus` option in the `docker` command), install `nvidia-docker2`.
+See [here](https://www.ibm.com/docs/en/maximo-vi/continuous-delivery?topic=planning-installing-docker-nvidia-docker2) for details.
+
 2. By executing the following commands, the window of the dynamics simulator Choreonoid will open and the robot will walk.
 Close the Choreonoid window to exit.
 ```bash
@@ -158,3 +161,8 @@ $ choreonoid sim_mc.cnoid --start-simulation
 $ source ~/ros/ws_bwc/devel/setup.bash
 $ roslaunch baseline_walking_controller display.launch
 ```
+
+## Controllers for motions beyond walking
+The following controllers are based on or developed with the same philosophy as BaselineWalkingController.
+- Loco-manipulation: [LocomanipController](https://github.com/isri-aist/LocomanipController)
+- Multi-contact motion: [MultiContactController](https://github.com/isri-aist/MultiContactController)

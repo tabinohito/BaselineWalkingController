@@ -42,9 +42,12 @@ states:
     configs:
       twistTopicName: /cmd_vel
 
+  BWC::Step_:
+    base: BWC::Step
+
   BWC::Main_:
     base: Parallel
-    states: [BWC::GuiWalk_, BWC::Teleop_]
+    states: [BWC::GuiWalk_, BWC::Teleop_, BWC::Step_]
 
 # Transitions map
 transitions:
@@ -204,6 +207,7 @@ CentroidalManager:
   method: PreviewControlZmp
   horizonDuration: 2.0 # [sec]
   horizonDt: 0.005 # [sec]
+  reinitForRefComZ: true
 
   # # DdpZmp
   # method: DdpZmp
@@ -213,11 +217,13 @@ CentroidalManager:
 
   # # FootGuidedControl
   # method: FootGuidedControl
+  # reinitForRefComZ: true
 
   # # IntrinsicallyStableMpc
   # method: IntrinsicallyStableMpc
   # horizonDuration: 2.0 # [sec]
   # horizonDt: 0.02 # [sec]
+  # reinitForRefComZ: true
 
 
 # OverwriteConfigKeys: [NoSensors]
