@@ -114,8 +114,10 @@ FootManager:
   enableWrenchDistForTouchDownFoot: true
   enableArmSwing: false
   fricCoeff: 0.5
-  touchDownRemainingDuration: 0.2 # [sec]
-  touchDownPosError: 0.02 # [m]
+  # touchDownRemainingDuration: 0.2 # [sec]
+  # touchDownPosError: 0.02 # [m]
+  touchDownRemainingDuration: 1.0 # [sec]
+  touchDownPosError: 0.06 # [m]
   touchDownForceZ: 100 # [N]
   impedanceGains:
     SingleSupport:

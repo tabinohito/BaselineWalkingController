@@ -1326,12 +1326,14 @@ bool FootManager::detectTouchDown() const
   // False for double support phase
   if(supportPhase_ == SupportPhase::DoubleSupport)
   {
+    mc_rtc::log::info("[FootManager] time : {} detectTouchDown is called in double support phase.",ctl().t());
     return false;
   }
 
   // False if the remaining duration does not meet the threshold
   if(touchDownRemainingDuration() > config_.touchDownRemainingDuration)
   {
+    mc_rtc::log::info("[FootManager] time : {} detectTouchDown is called before the remaining duration meets the threshold.",ctl().t());
     return false;
   }
 
@@ -1339,6 +1341,7 @@ bool FootManager::detectTouchDown() const
   if((swingTraj_->endPose_.translation() - swingTraj_->pose(ctl().t()).translation()).norm()
      > config_.touchDownPosError)
   {
+    mc_rtc::log::info("[FootManager] time : {} detectTouchDown is called before the position error meets the threshold.",ctl().t());
     return false;
   }
 
@@ -1347,6 +1350,7 @@ bool FootManager::detectTouchDown() const
   double fz = ctl().robot().surfaceWrench(surfaceName(swingFoot)).force().z();
   if(fz < config_.touchDownForceZ)
   {
+    mc_rtc::log::info("[FootManager] time : {} detectTouchDown is called before the normal force meets the threshold.",ctl().t());
     return false;
   }
 
