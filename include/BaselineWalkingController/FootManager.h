@@ -449,5 +449,11 @@ protected:
 
   //! Whether to require updating impedance gains for foot tasks
   bool requireImpGainUpdate_ = true;
+
+  //! ZMP points for trajectory 
+  std::vector<double> zmpPoint_x_;
+  std::vector<double> zmpPoint_y_;
+  std::vector<double> zmpPoint_t_;
+  int countFootstep_ = 0;
 };
 } // namespace BWC

@@ -53,8 +53,11 @@ void CentroidalManager::reset()
 
 void CentroidalManager::update()
 {
+  // count time for controller
+  t_ += ctl().dt();
+
   // Set MPC state
-  if(config().useActualStateForMpc)
+  if(config().useActualStateForMpc || ((0 < t_) && (t_ < 4)))
   {
     mpcCom_ = actualCom();
     mpcComVel_ = ctl().realRobot().comVelocity();
@@ -282,6 +285,12 @@ void CentroidalManager::removeFromGUI(mc_rtc::gui::StateBuilder & gui)
 
 void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
 {
+  //　今度IRSL Logger的なのを作ったときに追加する項目
+  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_position", this, [this]() { return ctl().robot().posW().translation(); });
+  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_orientation", this, [this]() { return mc_rbdyn::rpyFromMat(ctl().robot().posW().rotation()); });
+  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_position", this, [this]() { return ctl().realRobot().posW().translation(); });
+  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_orientation", this, [this]() { return mc_rbdyn::rpyFromMat(ctl().realRobot().posW().rotation()); });
+  
   logger.addLogEntry(config().name + "_Config_method", this, [this]() { return config().method; });
   logger.addLogEntry(config().name + "_Config_useActualStateForMpc", this,
                      [this]() { return config().useActualStateForMpc; });
@@ -303,7 +312,11 @@ void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
   MC_RTC_LOG_HELPER(config().name + "_CoM_MPC", mpcCom_);
   logger.addLogEntry(config().name + "_CoM_planned", this, [this]() { return ctl().comTask_->com(); });
   logger.addLogEntry(config().name + "_CoM_controlRobot", this, [this]() { return ctl().robot().com(); });
-  logger.addLogEntry(config().name + "_CoM_realRobot", this, [this]() { return actualCom(); });
+  logger.addLogEntry(config().name + "_CoM_realRobot_com", this, [this]() { return actualCom(); });
+
+  /*ADD CoM Velocity and Acceleration */
+  logger.addLogEntry(config().name + "_CoM_realRobot_comVelocity", this, [this]() { return ctl().realRobot().comVelocity(); });
+  logger.addLogEntry(config().name + "_CoM_realRobot_comAcceleration", this, [this]() { return ctl().realRobot().comAcceleration(); });
 
   MC_RTC_LOG_HELPER(config().name + "_forceZ_planned", plannedForceZ_);
   MC_RTC_LOG_HELPER(config().name + "_forceZ_control", controlForceZ_);
@@ -322,6 +335,9 @@ void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
   logger.addLogEntry(config().name + "_CentroidalMomentum_controlRobot", this, [this]() {
     return rbd::computeCentroidalMomentum(ctl().robot().mb(), ctl().robot().mbc(), ctl().robot().com());
   });
+
+  //Controller time log
+  logger.addLogEntry(config().name + "_t", this, [this]() { return t_; });
 }
 
 void CentroidalManager::removeFromLogger(mc_rtc::Logger & logger)
@@ -394,6 +410,18 @@ sva::PTransformd CentroidalManager::calcAnchorFrame(const mc_rbdyn::Robot & robo
 
 Eigen::Vector3d CentroidalManager::actualCom() const
 {
+  // is walking
+  auto is_walking = [this]() -> int {
+    return static_cast<int>(
+      !ctl().footManager_-> footstepQueue().empty() && ctl().footManager_-> footstepQueue().front().transitStartTime <= ctl().t()
+    );
+  };
+
+  // if(!is_walking())
+  // {
+  //   return ctl().realRobot().com();
+  // }
+
   return ctl().realRobot().com() + config().actualComOffset;
 }
 

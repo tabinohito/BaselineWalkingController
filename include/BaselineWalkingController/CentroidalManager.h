@@ -232,5 +232,7 @@ protected:
 
   //! Interpolation function of reference CoM Z position
   std::shared_ptr<TrajColl::CubicInterpolator<double>> refComZFunc_;
+
+  double t_ = 0; // Control time
 };
 } // namespace BWC

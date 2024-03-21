@@ -112,6 +112,20 @@ FootManager::FootManager(BaselineWalkingController * ctlPtr, const mc_rtc::Confi
     SwingTrajVariableTaskGain::loadDefaultConfig(mcRtcConfig("SwingTraj")("VariableTaskGain", mc_rtc::Configuration{}));
     SwingTrajLandingSearch::loadDefaultConfig(mcRtcConfig("SwingTraj")("LandingSearch", mc_rtc::Configuration{}));
   }
+
+  // Add ZMP Point configuration
+  if(mcRtcConfig.has("ZmpPoint"))
+  {
+    mcRtcConfig("ZmpPoint")("x", zmpPoint_x_);
+    mcRtcConfig("ZmpPoint")("y", zmpPoint_y_);
+    mcRtcConfig("ZmpPoint")("t", zmpPoint_t_);
+
+    if(zmpPoint_x_.size() != zmpPoint_y_.size() || zmpPoint_x_.size() != zmpPoint_t_.size())
+    {
+      mc_rtc::log::error("ZmpPoint configuration is invalid. x : {} y : {} t :{}", zmpPoint_x_.size(),zmpPoint_y_.size(),zmpPoint_t_.size());
+      return;
+    }
+  }
 }
 
 void FootManager::reset()
@@ -456,7 +470,18 @@ void FootManager::clearFootstepQueue()
 
 Eigen::Vector3d FootManager::clampDeltaTrans(const Eigen::Vector3d & deltaTrans, const Foot & foot)
 {
+  static int count = 1;
+  std::cout << "count: " << count << std::endl;
   Eigen::Vector3d deltaTransMax = config_.deltaTransLimit;
+  double ratio = 0.4 * count;
+  deltaTransMax.x() *= ( ratio < 1 ? ratio : 1);
+  // if(count == 1)
+  // {
+  //   deltaTransMax.x() = 0.1;
+    
+  //   std::cout << "deltaTrans: " << deltaTrans << std::endl;
+  // }
+
   Eigen::Vector3d deltaTransMin = -1 * config_.deltaTransLimit;
   if(foot == Foot::Left)
   {
@@ -466,6 +491,7 @@ Eigen::Vector3d FootManager::clampDeltaTrans(const Eigen::Vector3d & deltaTrans,
   {
     deltaTransMax.y() = 0;
   }
+  count++;
   return mc_filter::utils::clamp(deltaTrans, deltaTransMin, deltaTransMax);
 }
 
@@ -752,6 +778,8 @@ void FootManager::updateFootTraj()
     }
     else
     {
+      countFootstep_++;
+
       // Set swingFootstep_
       swingFootstep_ = &(footstepQueue_.front());
 
@@ -1097,7 +1125,11 @@ void FootManager::updateZmpTraj()
     zmpFunc_->appendPoint(std::make_pair(ctl().t(), calcZmpWithOffset(footPoses)));
     groundPosZFunc_->appendPoint(std::make_pair(ctl().t(), calcFootMidposZ(footPoses)));
     contactFootPosesList_.emplace(ctl().t(), footPoses);
+
+    countFootstep_ = 0;
   }
+
+  std::cout << "CountFootstep: " << countFootstep_ << std::endl;
 
   for(const auto & footstep : footstepQueue_)
   {
@@ -1114,6 +1146,17 @@ void FootManager::updateZmpTraj()
       groundPosZFunc_->appendPoint(std::make_pair(footstep.swingStartTime, calcFootMidposZ(footPoses)));
       contactFootPosesList_.emplace(footstep.swingStartTime, std::unordered_map<Foot, sva::PTransformd>{
                                                                  {supportFoot, footPoses.at(supportFoot)}});
+
+      if(countFootstep_ > 2){
+        for(size_t i = 0;i < zmpPoint_t_.size();i++)
+        {
+          Eigen::Vector3d swingFootZmp(supportFootZmp.x() + (zmpPoint_x_[i]), ((supportFootZmp.y() < 0 ) ? -1 :1) * zmpPoint_y_[i] + supportFootZmp.y(), supportFootZmp.z());
+          zmpFunc_->appendPoint(std::make_pair(footstep.swingStartTime + zmpPoint_t_[i], swingFootZmp));
+          groundPosZFunc_->appendPoint(std::make_pair(footstep.swingStartTime + zmpPoint_t_[i], calcFootMidposZ(footPoses)));
+          contactFootPosesList_.emplace(footstep.swingStartTime + zmpPoint_t_[i], std::unordered_map<Foot, sva::PTransformd>{
+                                                                    {supportFoot, footPoses.at(supportFoot)}});
+        }
+      }  
 
       // Update footPoses
       footPoses.at(footstep.foot) = (footstep.swingStartTime <= ctl().t() ? swingTraj_->endPose_ : footstep.pose);
@@ -1216,12 +1259,14 @@ bool FootManager::detectTouchDown() const
   // False for double support phase
   if(supportPhase_ == SupportPhase::DoubleSupport)
   {
+    // mc_rtc::log::info("[FootManager] detectTouchDown is called in double support phase.");
     return false;
   }
 
   // False if the remaining duration does not meet the threshold
   if(touchDownRemainingDuration() > config_.touchDownRemainingDuration)
   {
+    // mc_rtc::log::info("[FootManager] detectTouchDown is called before the remaining duration meets the threshold.");
     return false;
   }
 
@@ -1229,6 +1274,7 @@ bool FootManager::detectTouchDown() const
   if((swingTraj_->endPose_.translation() - swingTraj_->pose(ctl().t()).translation()).norm()
      > config_.touchDownPosError)
   {
+    // mc_rtc::log::info("[FootManager] detectTouchDown is called before the position error meets the threshold.");
     return false;
   }
 
@@ -1237,8 +1283,11 @@ bool FootManager::detectTouchDown() const
   double fz = ctl().robot().surfaceWrench(surfaceName(swingFoot)).force().z();
   if(fz < config_.touchDownForceZ)
   {
+    // mc_rtc::log::info("[FootManager] detectTouchDown is called before the normal force meets the threshold.");
     return false;
   }
+
+  // mc_rtc::log::info("[FootManager] detectTouchDown is called and touch down is detected.");
 
   return true;
 }
