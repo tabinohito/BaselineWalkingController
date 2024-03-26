@@ -473,8 +473,11 @@ Eigen::Vector3d FootManager::clampDeltaTrans(const Eigen::Vector3d & deltaTrans,
   static int count = 1;
   std::cout << "count: " << count << std::endl;
   Eigen::Vector3d deltaTransMax = config_.deltaTransLimit;
-  double ratio = 0.4 * count;
-  deltaTransMax.x() *= ( ratio < 1 ? ratio : 1);
+  /*Step width*/
+  // double ratio = 0.4 * count;
+  // deltaTransMax.x() *= ( ratio < 1 ? ratio : 1);
+
+  
   // if(count == 1)
   // {
   //   deltaTransMax.x() = 0.1;

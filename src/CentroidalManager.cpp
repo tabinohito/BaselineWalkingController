@@ -89,7 +89,11 @@ void CentroidalManager::update()
       double omega = std::sqrt(plannedForceZ_ / (robotMass_ * (mpcCom_.z() - refZmp_.z())));
       Eigen::Vector3d plannedDcm = ctl().comTask_->com() + ctl().comTask_->refVel() / omega;
       Eigen::Vector3d actualDcm = actualCom() + ctl().realRobot().comVelocity() / omega;
+      dcm_control_.head<2>() = config().dcmGainP * (actualDcm - plannedDcm).head<2>();
       controlZmp_.head<2>() += config().dcmGainP * (actualDcm - plannedDcm).head<2>();
+
+      actualDcm_ = actualDcm;
+      plannedDcm_ = plannedDcm;
     }
 
     // Apply ForceZ feedback
@@ -286,10 +290,35 @@ void CentroidalManager::removeFromGUI(mc_rtc::gui::StateBuilder & gui)
 void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
 {
   //　今度IRSL Logger的なのを作ったときに追加する項目
+  logger.addLogEntry(config().name + "_IRSL_LOG_dcmControlvalue", this, [this]() { return dcm_control_; });
   logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_position", this, [this]() { return ctl().robot().posW().translation(); });
   logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_orientation", this, [this]() { return mc_rbdyn::rpyFromMat(ctl().robot().posW().rotation()); });
   logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_position", this, [this]() { return ctl().realRobot().posW().translation(); });
   logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_orientation", this, [this]() { return mc_rbdyn::rpyFromMat(ctl().realRobot().posW().rotation()); });
+  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_q",this,
+                        [this]() 
+                        {
+                          std::vector<double> qOut(ctl().robot().refJointOrder().size(), 0);
+                          for(size_t i = 0; i < qOut.size(); ++i)
+                          {
+                            auto mbcIndex = ctl().robot().jointIndexInMBC(i);
+                            if(mbcIndex != -1) { qOut[i] = ctl().robot().mbc().q[static_cast<size_t>(mbcIndex)][0]; }
+                          }
+                          return qOut;
+                        });
+  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_q",this,
+                        [this]() 
+                        {
+                          std::vector<double> qOut(ctl().realRobot().refJointOrder().size(), 0);
+                          for(size_t i = 0; i < qOut.size(); ++i)
+                          {
+                            auto mbcIndex = ctl().realRobot().jointIndexInMBC(i);
+                            if(mbcIndex != -1) { qOut[i] = ctl().realRobot().mbc().q[static_cast<size_t>(mbcIndex)][0]; }
+                          }
+                          return qOut;
+                        });
+  logger.addLogEntry(config().name + "_IRSL_LOG_PlannedRobot_dcm", this, [this]() { return plannedDcm_; });
+  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_dcm", this, [this]() { return actualDcm_; });
   
   logger.addLogEntry(config().name + "_Config_method", this, [this]() { return config().method; });
   logger.addLogEntry(config().name + "_Config_useActualStateForMpc", this,
