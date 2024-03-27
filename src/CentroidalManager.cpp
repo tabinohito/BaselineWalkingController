@@ -33,6 +33,7 @@ void CentroidalManager::Configuration::load(const mc_rtc::Configuration & mcRtcC
   mcRtcConfig("useActualComForWrenchDist", useActualComForWrenchDist);
   mcRtcConfig("actualComOffset", actualComOffset);
   mcRtcConfig("wrenchDistConfig", wrenchDistConfig);
+  mcRtcConfig("comControlGainP", comControlGainP);
 }
 
 CentroidalManager::CentroidalManager(BaselineWalkingController * ctlPtr, const mc_rtc::Configuration & // mcRtcConfig
@@ -124,8 +125,12 @@ void CentroidalManager::update()
   {
     // Set target of CoM task
     Eigen::Vector3d plannedComAccel = calcPlannedComAccel();
+    // Eigen::Vector3d nextPlannedCom =
+    //     mpcCom_ + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
+
+    //Improved for foward CoM
     Eigen::Vector3d nextPlannedCom =
-        mpcCom_ + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
+        mpcCom_ + config().comControlGainP * (actualCom() -  ctl().comTask_->com()) + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
     Eigen::Vector3d nextPlannedComVel = mpcComVel_ + ctl().dt() * plannedComAccel;
     if(isConstantComZ())
     {
@@ -319,6 +324,7 @@ void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
                         });
   logger.addLogEntry(config().name + "_IRSL_LOG_PlannedRobot_dcm", this, [this]() { return plannedDcm_; });
   logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_dcm", this, [this]() { return actualDcm_; });
+  logger.addLogEntry(config().name + "_IRSL_LOG_comControlGainP", this, [this]() { return config().comControlGainP; });
   
   logger.addLogEntry(config().name + "_Config_method", this, [this]() { return config().method; });
   logger.addLogEntry(config().name + "_Config_useActualStateForMpc", this,
