@@ -128,9 +128,9 @@ void CentroidalManager::update()
     // Eigen::Vector3d nextPlannedCom =
     //     mpcCom_ + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
 
-    //Improved for foward CoM
-    Eigen::Vector3d nextPlannedCom =
-        mpcCom_ + config().comControlGainP * (actualCom() -  ctl().comTask_->com()) + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
+    // Improved for foward CoM
+    Eigen::Vector3d nextPlannedCom = (1 - config().comControlGainP)* mpcCom_ + config().comControlGainP * actualCom()
+                                     + ctl().dt() * ctl().realRobot().comVelocity() + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
     Eigen::Vector3d nextPlannedComVel = mpcComVel_ + ctl().dt() * plannedComAccel;
     if(isConstantComZ())
     {
@@ -296,36 +296,42 @@ void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
 {
   //　今度IRSL Logger的なのを作ったときに追加する項目
   logger.addLogEntry(config().name + "_IRSL_LOG_dcmControlvalue", this, [this]() { return dcm_control_; });
-  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_position", this, [this]() { return ctl().robot().posW().translation(); });
-  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_orientation", this, [this]() { return mc_rbdyn::rpyFromMat(ctl().robot().posW().rotation()); });
-  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_position", this, [this]() { return ctl().realRobot().posW().translation(); });
-  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_orientation", this, [this]() { return mc_rbdyn::rpyFromMat(ctl().realRobot().posW().rotation()); });
-  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_q",this,
-                        [this]() 
-                        {
-                          std::vector<double> qOut(ctl().robot().refJointOrder().size(), 0);
-                          for(size_t i = 0; i < qOut.size(); ++i)
-                          {
-                            auto mbcIndex = ctl().robot().jointIndexInMBC(i);
-                            if(mbcIndex != -1) { qOut[i] = ctl().robot().mbc().q[static_cast<size_t>(mbcIndex)][0]; }
-                          }
-                          return qOut;
-                        });
-  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_q",this,
-                        [this]() 
-                        {
-                          std::vector<double> qOut(ctl().realRobot().refJointOrder().size(), 0);
-                          for(size_t i = 0; i < qOut.size(); ++i)
-                          {
-                            auto mbcIndex = ctl().realRobot().jointIndexInMBC(i);
-                            if(mbcIndex != -1) { qOut[i] = ctl().realRobot().mbc().q[static_cast<size_t>(mbcIndex)][0]; }
-                          }
-                          return qOut;
-                        });
+  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_position", this,
+                     [this]() { return ctl().robot().posW().translation(); });
+  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_orientation", this,
+                     [this]() { return mc_rbdyn::rpyFromMat(ctl().robot().posW().rotation()); });
+  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_position", this,
+                     [this]() { return ctl().realRobot().posW().translation(); });
+  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_orientation", this,
+                     [this]() { return mc_rbdyn::rpyFromMat(ctl().realRobot().posW().rotation()); });
+  logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_q", this, [this]() {
+    std::vector<double> qOut(ctl().robot().refJointOrder().size(), 0);
+    for(size_t i = 0; i < qOut.size(); ++i)
+    {
+      auto mbcIndex = ctl().robot().jointIndexInMBC(i);
+      if(mbcIndex != -1)
+      {
+        qOut[i] = ctl().robot().mbc().q[static_cast<size_t>(mbcIndex)][0];
+      }
+    }
+    return qOut;
+  });
+  logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_q", this, [this]() {
+    std::vector<double> qOut(ctl().realRobot().refJointOrder().size(), 0);
+    for(size_t i = 0; i < qOut.size(); ++i)
+    {
+      auto mbcIndex = ctl().realRobot().jointIndexInMBC(i);
+      if(mbcIndex != -1)
+      {
+        qOut[i] = ctl().realRobot().mbc().q[static_cast<size_t>(mbcIndex)][0];
+      }
+    }
+    return qOut;
+  });
   logger.addLogEntry(config().name + "_IRSL_LOG_PlannedRobot_dcm", this, [this]() { return plannedDcm_; });
   logger.addLogEntry(config().name + "_IRSL_LOG_RealRobot_dcm", this, [this]() { return actualDcm_; });
   logger.addLogEntry(config().name + "_IRSL_LOG_comControlGainP", this, [this]() { return config().comControlGainP; });
-  
+
   logger.addLogEntry(config().name + "_Config_method", this, [this]() { return config().method; });
   logger.addLogEntry(config().name + "_Config_useActualStateForMpc", this,
                      [this]() { return config().useActualStateForMpc; });
@@ -345,13 +351,27 @@ void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
   logger.addLogEntry(config().name + "_Config_actualComOffset", this, [this]() { return config().actualComOffset; });
 
   MC_RTC_LOG_HELPER(config().name + "_CoM_MPC", mpcCom_);
-  logger.addLogEntry(config().name + "_CoM_planned", this, [this]() { return ctl().comTask_->com(); });
-  logger.addLogEntry(config().name + "_CoM_controlRobot", this, [this]() { return ctl().robot().com(); });
-  logger.addLogEntry(config().name + "_CoM_realRobot_com", this, [this]() { return actualCom(); });
 
+  logger.addLogEntry(config().name + "_CoM_planned_com", this, [this]() { return ctl().comTask_->com(); });
   /*ADD CoM Velocity and Acceleration */
-  logger.addLogEntry(config().name + "_CoM_realRobot_comVelocity", this, [this]() { return ctl().realRobot().comVelocity(); });
-  logger.addLogEntry(config().name + "_CoM_realRobot_comAcceleration", this, [this]() { return ctl().realRobot().comAcceleration(); });
+  logger.addLogEntry(config().name + "_CoM_planned_comVelocity", this,
+                     [this]() { return ctl().comTask_->refVel(); });
+  logger.addLogEntry(config().name + "_CoM_planned_comAcceleration", this,
+                     [this]() { return ctl().comTask_->refAccel(); });
+  
+  logger.addLogEntry(config().name + "_CoM_controlRobot_com", this, [this]() { return ctl().robot().com(); });
+  /*ADD CoM Velocity and Acceleration */
+  logger.addLogEntry(config().name + "_CoM_controlRobot_comVelocity", this,
+                    [this]() { return ctl().robot().comVelocity(); });
+  logger.addLogEntry(config().name + "_CoM_controlRobot_comAcceleration", this,
+                    [this]() { return ctl().robot().comAcceleration(); });
+
+  logger.addLogEntry(config().name + "_CoM_realRobot_com", this, [this]() { return actualCom(); });
+  /*ADD CoM Velocity and Acceleration */
+  logger.addLogEntry(config().name + "_CoM_realRobot_comVelocity", this,
+                     [this]() { return ctl().realRobot().comVelocity(); });
+  logger.addLogEntry(config().name + "_CoM_realRobot_comAcceleration", this,
+                     [this]() { return ctl().realRobot().comAcceleration(); });
 
   MC_RTC_LOG_HELPER(config().name + "_forceZ_planned", plannedForceZ_);
   MC_RTC_LOG_HELPER(config().name + "_forceZ_control", controlForceZ_);
@@ -371,7 +391,7 @@ void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
     return rbd::computeCentroidalMomentum(ctl().robot().mb(), ctl().robot().mbc(), ctl().robot().com());
   });
 
-  //Controller time log
+  // Controller time log
   logger.addLogEntry(config().name + "_t", this, [this]() { return t_; });
 }
 
@@ -447,9 +467,8 @@ Eigen::Vector3d CentroidalManager::actualCom() const
 {
   // is walking
   auto is_walking = [this]() -> int {
-    return static_cast<int>(
-      !ctl().footManager_-> footstepQueue().empty() && ctl().footManager_-> footstepQueue().front().transitStartTime <= ctl().t()
-    );
+    return static_cast<int>(!ctl().footManager_->footstepQueue().empty()
+                            && ctl().footManager_->footstepQueue().front().transitStartTime <= ctl().t());
   };
 
   // if(!is_walking())

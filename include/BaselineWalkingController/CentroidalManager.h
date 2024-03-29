@@ -78,7 +78,7 @@ public:
     //! Configuration for wrench distribution
     mc_rtc::Configuration wrenchDistConfig;
 
-    double comControlGainP = 0; // CoM control gain P 
+    double comControlGainP = 0; // CoM control gain P
 
     /** \brief Load mc_rtc configuration. */
     virtual void load(const mc_rtc::Configuration & mcRtcConfig);
