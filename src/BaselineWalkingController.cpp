@@ -148,6 +148,8 @@ void BaselineWalkingController::reset(const mc_control::ControllerResetData & re
 bool BaselineWalkingController::run()
 {
   t_ += dt();
+  // auto postureTask = getPostureTask(robot().name());
+  // std::cout << "Posture Task weight: " << postureTask->weight() << std::endl;
 
   if(enableManagerUpdate_)
   {

@@ -58,7 +58,7 @@ void CentroidalManager::update()
   t_ += ctl().dt();
 
   // Set MPC state
-  if(config().useActualStateForMpc || ((0 < t_) && (t_ < 4)))
+  if(config().useActualStateForMpc) // || ((0 < t_) && (t_ < 4)))
   {
     mpcCom_ = actualCom();
     mpcComVel_ = ctl().realRobot().comVelocity();
@@ -295,6 +295,19 @@ void CentroidalManager::removeFromGUI(mc_rtc::gui::StateBuilder & gui)
 void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
 {
   //　今度IRSL Logger的なのを作ったときに追加する項目
+  logger.addLogEntry(config().name + "_IRSL_LOG_QP_CoMTask", this, [this]() { 
+    return ctl().comTask_->eval(); 
+  });
+  logger.addLogEntry(config().name + "_IRSL_LOG_QP_BaseTask", this, [this]() { 
+    return ctl().baseOriTask_->eval(); 
+  });
+  logger.addLogEntry(config().name + "_IRSL_LOG_QP_FootTask_Left", this, [this]() { 
+    return ctl().footTasks_.at(Foot::Left)->eval(); 
+  });
+  logger.addLogEntry(config().name + "_IRSL_LOG_QP_FootTask_Right", this, [this]() { 
+    return ctl().footTasks_.at(Foot::Right)->eval(); 
+  });
+
   logger.addLogEntry(config().name + "_IRSL_LOG_dcmControlvalue", this, [this]() { return dcm_control_; });
   logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_position", this,
                      [this]() { return ctl().robot().posW().translation(); });
