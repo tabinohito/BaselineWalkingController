@@ -450,6 +450,8 @@ protected:
   //! Whether to require updating impedance gains for foot tasks
   bool requireImpGainUpdate_ = true;
 
+  Eigen::Quaterniond Orientation_;
+
   //! ZMP points for trajectory 
   std::vector<double> zmpPoint_x_;
   std::vector<double> zmpPoint_y_;

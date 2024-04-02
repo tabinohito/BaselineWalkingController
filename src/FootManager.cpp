@@ -1050,14 +1050,11 @@ void FootManager::updateFootTraj()
   }
   else
   {
-        // compliment real base orientation
-    auto baseYaw = mc_rbdyn::rpyFromMat(ctl().realRobot().posW().rotation()).x();
-    auto baseYaw_target = mc_rbdyn::rpyFromMat((*baseYawFunc_)(ctl().t())).x();
-    auto baseYaw_comp = baseYaw_target + (baseYaw_target - baseYaw);
-    ctl().baseOriTask_->orientation(Eigen::AngleAxisd(baseYaw_comp, Eigen::Vector3d::UnitZ()).toRotationMatrix());
-    // auto orientation = mc_rbdyn::rppyFromQuat(ctl().baseOriTask_->orientation());
-    // auto comp_orientation = orientation + (orientation - mc_rbdyn::rppyFromQuat((*baseYawFunc_)(ctl().t()).transpose()));
-    // ctl().baseOriTask_->orientation((*baseYawFunc_)(ctl().t()).transpose());
+    // compliment real base orientation
+    auto ori = mc_rbdyn::rpyFromMat((*baseYawFunc_)(ctl().t()).transpose());
+    ori.y() = mc_rbdyn::rpyFromMat(ctl().robot().posW().rotation()).y() - mc_rbdyn::rpyFromMat(ctl().realRobot().posW().rotation()).y();
+
+    ctl().baseOriTask_->orientation(mc_rbdyn::rpyToMat(ori));
     ctl().baseOriTask_->refVel(baseYawFunc_->derivative(ctl().t(), 1));
     ctl().baseOriTask_->refAccel(baseYawFunc_->derivative(ctl().t(), 2));
   }
