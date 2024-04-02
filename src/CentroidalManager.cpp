@@ -125,12 +125,12 @@ void CentroidalManager::update()
   {
     // Set target of CoM task
     Eigen::Vector3d plannedComAccel = calcPlannedComAccel();
-    // Eigen::Vector3d nextPlannedCom =
-    //     mpcCom_ + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
+    Eigen::Vector3d nextPlannedCom =
+        mpcCom_ + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
 
-    // Improved for foward CoM
-    Eigen::Vector3d nextPlannedCom = (1 - config().comControlGainP)* mpcCom_ + config().comControlGainP * actualCom()
-                                     + ctl().dt() * ctl().realRobot().comVelocity() + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
+    // // Improved for foward CoM
+    // Eigen::Vector3d nextPlannedCom = (1 - config().comControlGainP)* mpcCom_ + config().comControlGainP * actualCom()
+    //                                  + ctl().dt() * ctl().realRobot().comVelocity() + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
     Eigen::Vector3d nextPlannedComVel = mpcComVel_ + ctl().dt() * plannedComAccel;
     if(isConstantComZ())
     {

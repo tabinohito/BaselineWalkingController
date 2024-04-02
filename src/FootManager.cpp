@@ -122,7 +122,8 @@ FootManager::FootManager(BaselineWalkingController * ctlPtr, const mc_rtc::Confi
 
     if(zmpPoint_x_.size() != zmpPoint_y_.size() || zmpPoint_x_.size() != zmpPoint_t_.size())
     {
-      mc_rtc::log::error("ZmpPoint configuration is invalid. x : {} y : {} t :{}", zmpPoint_x_.size(),zmpPoint_y_.size(),zmpPoint_t_.size());
+      mc_rtc::log::error("ZmpPoint configuration is invalid. x : {} y : {} t :{}", zmpPoint_x_.size(),
+                         zmpPoint_y_.size(), zmpPoint_t_.size());
       return;
     }
   }
@@ -227,13 +228,13 @@ void FootManager::addToGUI(mc_rtc::gui::StateBuilder & gui)
           [this](double v) { config_.doubleSupportRatio = v; }),
       mc_rtc::gui::ArrayInput(
           "deltaTransLimit", {"x", "y", "theta"},
-          [this]() -> Eigen::Vector3d {
+          [this]() -> Eigen::Vector3d
+          {
             return Eigen::Vector3d(config_.deltaTransLimit[0], config_.deltaTransLimit[1],
                                    mc_rtc::constants::toDeg(config_.deltaTransLimit[2]));
           },
-          [this](const Eigen::Vector3d & v) {
-            config_.deltaTransLimit = Eigen::Vector3d(v[0], v[1], mc_rtc::constants::toRad(v[2]));
-          }),
+          [this](const Eigen::Vector3d & v)
+          { config_.deltaTransLimit = Eigen::Vector3d(v[0], v[1], mc_rtc::constants::toRad(v[2])); }),
       mc_rtc::gui::ArrayInput(
           "footTaskStiffness", {"ax", "ay", "az", "tx", "ty", "tz"},
           [this]() -> const sva::MotionVecd & { return config_.footTaskGain.stiffness; },
@@ -275,18 +276,20 @@ void FootManager::addToGUI(mc_rtc::gui::StateBuilder & gui)
       mc_rtc::gui::NumberInput(
           "touchDownForceZ", [this]() { return config_.touchDownForceZ; },
           [this](double v) { config_.touchDownForceZ = v; }),
-      mc_rtc::gui::Label("jointsForArmSwing", [this]() {
-        std::string s;
-        for(const auto & jointAngleKV : config_.jointAnglesForArmSwing.at("Nominal"))
-        {
-          if(!s.empty())
-          {
-            s += " / ";
-          }
-          s += jointAngleKV.first;
-        }
-        return s;
-      }));
+      mc_rtc::gui::Label("jointsForArmSwing",
+                         [this]()
+                         {
+                           std::string s;
+                           for(const auto & jointAngleKV : config_.jointAnglesForArmSwing.at("Nominal"))
+                           {
+                             if(!s.empty())
+                             {
+                               s += " / ";
+                             }
+                             s += jointAngleKV.first;
+                           }
+                           return s;
+                         }));
 
   gui.addElement(
       {ctl().name(), config_.name, "Config", "VelMode"},
@@ -295,9 +298,8 @@ void FootManager::addToGUI(mc_rtc::gui::StateBuilder & gui)
           [this](int footstepQueueSize) { velModeData_.config_.footstepQueueSize = std::max(footstepQueueSize, 3); }),
       mc_rtc::gui::Checkbox(
           "enableOnlineFootstepUpdate", [this]() { return velModeData_.config_.enableOnlineFootstepUpdate; },
-          [this]() {
-            velModeData_.config_.enableOnlineFootstepUpdate = !velModeData_.config_.enableOnlineFootstepUpdate;
-          }));
+          [this]()
+          { velModeData_.config_.enableOnlineFootstepUpdate = !velModeData_.config_.enableOnlineFootstepUpdate; }));
 
   for(const auto & impGainKV : config_.impGains)
   {
@@ -305,30 +307,30 @@ void FootManager::addToGUI(mc_rtc::gui::StateBuilder & gui)
     gui.addElement({ctl().name(), config_.name, "ImpedanceGains", impGainType},
                    mc_rtc::gui::ArrayInput(
                        "Damper", {"cx", "cy", "cz", "fx", "fy", "fz"},
-                       [this, impGainType]() -> const sva::ImpedanceVecd & {
-                         return config_.impGains.at(impGainType).damper().vec();
-                       },
-                       [this, impGainType](const Eigen::Vector6d & v) {
+                       [this, impGainType]() -> const sva::ImpedanceVecd &
+                       { return config_.impGains.at(impGainType).damper().vec(); },
+                       [this, impGainType](const Eigen::Vector6d & v)
+                       {
                          config_.impGains.at(impGainType).damper().vec(v);
                          requireImpGainUpdate_ = true;
                        }));
     gui.addElement({ctl().name(), config_.name, "ImpedanceGains", impGainType},
                    mc_rtc::gui::ArrayInput(
                        "Spring", {"cx", "cy", "cz", "fx", "fy", "fz"},
-                       [this, impGainType]() -> const sva::ImpedanceVecd & {
-                         return config_.impGains.at(impGainType).spring().vec();
-                       },
-                       [this, impGainType](const Eigen::Vector6d & v) {
+                       [this, impGainType]() -> const sva::ImpedanceVecd &
+                       { return config_.impGains.at(impGainType).spring().vec(); },
+                       [this, impGainType](const Eigen::Vector6d & v)
+                       {
                          config_.impGains.at(impGainType).spring().vec(v);
                          requireImpGainUpdate_ = true;
                        }));
     gui.addElement({ctl().name(), config_.name, "ImpedanceGains", impGainType},
                    mc_rtc::gui::ArrayInput(
                        "Wrench", {"cx", "cy", "cz", "fx", "fy", "fz"},
-                       [this, impGainType]() -> const sva::ImpedanceVecd & {
-                         return config_.impGains.at(impGainType).wrench().vec();
-                       },
-                       [this, impGainType](const Eigen::Vector6d & v) {
+                       [this, impGainType]() -> const sva::ImpedanceVecd &
+                       { return config_.impGains.at(impGainType).wrench().vec(); },
+                       [this, impGainType](const Eigen::Vector6d & v)
+                       {
                          config_.impGains.at(impGainType).wrench().vec(v);
                          requireImpGainUpdate_ = true;
                        }));
@@ -353,9 +355,10 @@ void FootManager::removeFromGUI(mc_rtc::gui::StateBuilder & gui)
 void FootManager::addToLogger(mc_rtc::Logger & logger)
 {
   logger.addLogEntry(config_.name + "_footstepQueueSize", this, [this]() { return footstepQueue_.size(); });
-  logger.addLogEntry(config_.name + "_walking", this, [this]() {
-    return static_cast<int>(!footstepQueue_.empty() && footstepQueue_.front().transitStartTime <= ctl().t());
-  });
+  logger.addLogEntry(
+      config_.name + "_walking", this,
+      [this]()
+      { return static_cast<int>(!footstepQueue_.empty() && footstepQueue_.front().transitStartTime <= ctl().t()); });
 
   for(const auto & foot : Feet::Both)
   {
@@ -477,11 +480,10 @@ Eigen::Vector3d FootManager::clampDeltaTrans(const Eigen::Vector3d & deltaTrans,
   // double ratio = 0.4 * count;
   // deltaTransMax.x() *= ( ratio < 1 ? ratio : 1);
 
-  
   // if(count == 1)
   // {
   //   deltaTransMax.x() = 0.1;
-    
+
   //   std::cout << "deltaTrans: " << deltaTrans << std::endl;
   // }
 
@@ -650,9 +652,8 @@ bool FootManager::walkToRelativePose(const Eigen::Vector3d & targetTrans,
   auto convertTo2d = [](const sva::PTransformd & pose) -> Eigen::Vector3d {
     return Eigen::Vector3d(pose.translation().x(), pose.translation().y(), mc_rbdyn::rpyFromMat(pose.rotation()).z());
   };
-  auto convertTo3d = [](const Eigen::Vector3d & trans) -> sva::PTransformd {
-    return sva::PTransformd(sva::RotZ(trans.z()), Eigen::Vector3d(trans.x(), trans.y(), 0));
-  };
+  auto convertTo3d = [](const Eigen::Vector3d & trans) -> sva::PTransformd
+  { return sva::PTransformd(sva::RotZ(trans.z()), Eigen::Vector3d(trans.x(), trans.y(), 0)); };
 
   // The 2D variables (i.e., targetTrans, deltaTrans) represent the transformation relative to the initial pose,
   // while the 3D variables (i.e., initialFootMidpose, goalFootMidpose, footMidpose) represent the
@@ -877,7 +878,8 @@ void FootManager::updateFootTraj()
         if(totalSize > 0 && forwardDist > forwardDistThre && forwardAngle < forwardAngleThre)
         {
           auto jointAnglesMapToVec =
-              [totalSize](const std::map<std::string, std::vector<double>> & jointAnglesMap) -> Eigen::VectorXd {
+              [totalSize](const std::map<std::string, std::vector<double>> & jointAnglesMap) -> Eigen::VectorXd
+          {
             Eigen::VectorXd jointAnglesVec(totalSize);
             int vecIdx = 0;
             for(const auto & jointAngleKV : jointAnglesMap)
@@ -1048,7 +1050,14 @@ void FootManager::updateFootTraj()
   }
   else
   {
-    ctl().baseOriTask_->orientation((*baseYawFunc_)(ctl().t()).transpose());
+        // compliment real base orientation
+    auto baseYaw = mc_rbdyn::rpyFromMat(ctl().realRobot().posW().rotation()).x();
+    auto baseYaw_target = mc_rbdyn::rpyFromMat((*baseYawFunc_)(ctl().t())).x();
+    auto baseYaw_comp = baseYaw_target + (baseYaw_target - baseYaw);
+    ctl().baseOriTask_->orientation(Eigen::AngleAxisd(baseYaw_comp, Eigen::Vector3d::UnitZ()).toRotationMatrix());
+    // auto orientation = mc_rbdyn::rppyFromQuat(ctl().baseOriTask_->orientation());
+    // auto comp_orientation = orientation + (orientation - mc_rbdyn::rppyFromQuat((*baseYawFunc_)(ctl().t()).transpose()));
+    // ctl().baseOriTask_->orientation((*baseYawFunc_)(ctl().t()).transpose());
     ctl().baseOriTask_->refVel(baseYawFunc_->derivative(ctl().t(), 1));
     ctl().baseOriTask_->refAccel(baseYawFunc_->derivative(ctl().t(), 2));
   }
@@ -1063,7 +1072,8 @@ void FootManager::updateFootTraj()
     else
     {
       auto jointAnglesVecToMap =
-          [this](const Eigen::VectorXd & jointAnglesVec) -> std::map<std::string, std::vector<double>> {
+          [this](const Eigen::VectorXd & jointAnglesVec) -> std::map<std::string, std::vector<double>>
+      {
         std::map<std::string, std::vector<double>> jointAnglesMap;
         int vecIdx = 0;
         for(const auto & jointAngleKV : config_.jointAnglesForArmSwing.at("Nominal"))
@@ -1118,9 +1128,8 @@ void FootManager::updateZmpTraj()
   }
   std::unordered_map<Foot, sva::PTransformd> footPoses = trajStartFootPoses_;
 
-  auto calcFootMidposZ = [](const std::unordered_map<Foot, sva::PTransformd> & _footPoses) {
-    return 0.5 * (_footPoses.at(Foot::Left).translation().z() + _footPoses.at(Foot::Right).translation().z());
-  };
+  auto calcFootMidposZ = [](const std::unordered_map<Foot, sva::PTransformd> & _footPoses)
+  { return 0.5 * (_footPoses.at(Foot::Left).translation().z() + _footPoses.at(Foot::Right).translation().z()); };
 
   if(footstepQueue_.empty() || ctl().t() < footstepQueue_.front().transitStartTime)
   {
@@ -1150,16 +1159,21 @@ void FootManager::updateZmpTraj()
       contactFootPosesList_.emplace(footstep.swingStartTime, std::unordered_map<Foot, sva::PTransformd>{
                                                                  {supportFoot, footPoses.at(supportFoot)}});
 
-      if(countFootstep_ > 2){
-        for(size_t i = 0;i < zmpPoint_t_.size();i++)
+      if(countFootstep_ > 2)
+      {
+        for(size_t i = 0; i < zmpPoint_t_.size(); i++)
         {
-          Eigen::Vector3d swingFootZmp(supportFootZmp.x() + (zmpPoint_x_[i]), ((supportFootZmp.y() < 0 ) ? -1 :1) * zmpPoint_y_[i] + supportFootZmp.y(), supportFootZmp.z());
+          Eigen::Vector3d swingFootZmp(supportFootZmp.x() + (zmpPoint_x_[i]),
+                                       ((supportFootZmp.y() < 0) ? -1 : 1) * zmpPoint_y_[i] + supportFootZmp.y(),
+                                       supportFootZmp.z());
           zmpFunc_->appendPoint(std::make_pair(footstep.swingStartTime + zmpPoint_t_[i], swingFootZmp));
-          groundPosZFunc_->appendPoint(std::make_pair(footstep.swingStartTime + zmpPoint_t_[i], calcFootMidposZ(footPoses)));
-          contactFootPosesList_.emplace(footstep.swingStartTime + zmpPoint_t_[i], std::unordered_map<Foot, sva::PTransformd>{
-                                                                    {supportFoot, footPoses.at(supportFoot)}});
+          groundPosZFunc_->appendPoint(
+              std::make_pair(footstep.swingStartTime + zmpPoint_t_[i], calcFootMidposZ(footPoses)));
+          contactFootPosesList_.emplace(
+              footstep.swingStartTime + zmpPoint_t_[i],
+              std::unordered_map<Foot, sva::PTransformd>{{supportFoot, footPoses.at(supportFoot)}});
         }
-      }  
+      }
 
       // Update footPoses
       footPoses.at(footstep.foot) = (footstep.swingStartTime <= ctl().t() ? swingTraj_->endPose_ : footstep.pose);
@@ -1195,9 +1209,8 @@ void FootManager::updateVelMode()
   auto convertTo2d = [](const sva::PTransformd & pose) -> Eigen::Vector3d {
     return Eigen::Vector3d(pose.translation().x(), pose.translation().y(), mc_rbdyn::rpyFromMat(pose.rotation()).z());
   };
-  auto convertTo3d = [](const Eigen::Vector3d & trans) -> sva::PTransformd {
-    return sva::PTransformd(sva::RotZ(trans.z()), Eigen::Vector3d(trans.x(), trans.y(), 0));
-  };
+  auto convertTo3d = [](const Eigen::Vector3d & trans) -> sva::PTransformd
+  { return sva::PTransformd(sva::RotZ(trans.z()), Eigen::Vector3d(trans.x(), trans.y(), 0)); };
 
   // Keep the next footstep and delete the second and subsequent footsteps
   footstepQueue_.erase(footstepQueue_.begin() + 1, footstepQueue_.end());
