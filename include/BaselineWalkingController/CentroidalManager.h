@@ -239,5 +239,7 @@ protected:
   Eigen::Vector3d dcm_control_ = Eigen::Vector3d::Zero(); // DCM control value
   Eigen::Vector3d plannedDcm_ = Eigen::Vector3d::Zero(); // Planned DCM
   Eigen::Vector3d actualDcm_ = Eigen::Vector3d::Zero(); // Actual DCM
+
+  Eigen::Vector3d complementCom_ = Eigen::Vector3d::Zero(); // Complement CoM
 };
 } // namespace BWC

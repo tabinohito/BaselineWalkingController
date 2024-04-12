@@ -125,12 +125,28 @@ void CentroidalManager::update()
   {
     // Set target of CoM task
     Eigen::Vector3d plannedComAccel = calcPlannedComAccel();
-    Eigen::Vector3d nextPlannedCom =
-        mpcCom_ + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
+    Eigen::Vector3d nextPlannedCom;
+    complementCom_[0] = ctl().robot().com().x() - ctl().realRobot().com().x();
+    complementCom_[1] = ctl().robot().com().y() - ctl().realRobot().com().y();
+    complementCom_[2] = 0;
 
-    // // Improved for foward CoM
+
+    // PlanA
+    if((0 < t_) && (t_ < 1)){
+      nextPlannedCom =
+          mpcCom_ + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
+    }
+    else{
+      nextPlannedCom = (mpcCom_ - complementCom_) + 
+                                          ctl().dt() * (mpcComVel_) +  //(ctl().realRobot().comVelocity() - ctl().robot().comVelocity())) + 
+                                          (0.5 * std::pow(ctl().dt(), 2) * plannedComAccel);
+
+    }
+
+    // Improved for foward CoM
     // Eigen::Vector3d nextPlannedCom = (1 - config().comControlGainP)* mpcCom_ + config().comControlGainP * actualCom()
     //                                  + ctl().dt() * ctl().realRobot().comVelocity() + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
+
     Eigen::Vector3d nextPlannedComVel = mpcComVel_ + ctl().dt() * plannedComAccel;
     if(isConstantComZ())
     {
@@ -308,6 +324,10 @@ void CentroidalManager::addToLogger(mc_rtc::Logger & logger)
     return ctl().footTasks_.at(Foot::Right)->eval(); 
   });
 
+  logger.addLogEntry(config().name + "_IRSL_LOG_QP_FootTask_Right", this, [this]() { 
+    return ctl().footTasks_.at(Foot::Right)->eval(); 
+  });
+  logger.addLogEntry(config().name + "_IRSL_LOG_Diff_real_control", this, [this]() { return complementCom_; });
   logger.addLogEntry(config().name + "_IRSL_LOG_dcmControlvalue", this, [this]() { return dcm_control_; });
   logger.addLogEntry(config().name + "_IRSL_LOG_ControlRobot_position", this,
                      [this]() { return ctl().robot().posW().translation(); });
