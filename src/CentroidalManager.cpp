@@ -66,7 +66,12 @@ void CentroidalManager::update()
   else
   {
     // Task targets are the planned state in the previous step
-    mpcCom_ = ctl().comTask_->com();
+    if((0 < t_) && (t_ < 1)){
+      mpcCom_ = ctl().comTask_->com();
+    }
+    else{
+      mpcCom_ = pre_nextPlannedCom_;
+    }
     mpcComVel_ = ctl().comTask_->refVel();
   }
   refZmp_ = ctl().footManager_->calcRefZmp(ctl().t());
@@ -88,7 +93,8 @@ void CentroidalManager::update()
     if(config().enableZmpFeedback)
     {
       double omega = std::sqrt(plannedForceZ_ / (robotMass_ * (mpcCom_.z() - refZmp_.z())));
-      Eigen::Vector3d plannedDcm = ctl().comTask_->com() + ctl().comTask_->refVel() / omega;
+      // Eigen::Vector3d plannedDcm = ctl().comTask_->com() + ctl().comTask_->refVel() / omega;
+      Eigen::Vector3d plannedDcm = pre_nextPlannedCom_ + ctl().comTask_->refVel() / omega;
       Eigen::Vector3d actualDcm = actualCom() + ctl().realRobot().comVelocity() / omega;
       dcm_control_.head<2>() = config().dcmGainP * (actualDcm - plannedDcm).head<2>();
       controlZmp_.head<2>() += config().dcmGainP * (actualDcm - plannedDcm).head<2>();
@@ -154,9 +160,11 @@ void CentroidalManager::update()
       nextPlannedComVel.z() = calcRefComZ(ctl().t(), 1) + ctl().footManager_->calcRefGroundPosZ(ctl().t(), 1);
       plannedComAccel.z() = calcRefComZ(ctl().t(), 2) + ctl().footManager_->calcRefGroundPosZ(ctl().t(), 2);
     }
-    ctl().comTask_->com(nextPlannedCom + config().comControlGainP * (ctl().comTask_->com() - ctl().realRobot().com()));
+    ctl().comTask_->com(nextPlannedCom + config().comControlGainP * (pre_nextPlannedCom_- ctl().realRobot().com()));
     ctl().comTask_->refVel(nextPlannedComVel);
     ctl().comTask_->refAccel(plannedComAccel);
+
+    pre_nextPlannedCom_ = nextPlannedCom;
 
     // Set target wrench of foot tasks
     const auto & targetWrenchList = ForceColl::calcWrenchList(contactList_, wrenchDist_->resultWrenchRatio_);

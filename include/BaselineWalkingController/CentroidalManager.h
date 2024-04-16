@@ -241,5 +241,6 @@ protected:
   Eigen::Vector3d actualDcm_ = Eigen::Vector3d::Zero(); // Actual DCM
 
   Eigen::Vector3d complementCom_ = Eigen::Vector3d::Zero(); // Complement CoM
+  Eigen::Vector3d pre_nextPlannedCom_ = Eigen::Vector3d::Zero(); // Previous next planned CoM
 };
 } // namespace BWC
