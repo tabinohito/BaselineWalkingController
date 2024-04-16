@@ -126,22 +126,22 @@ void CentroidalManager::update()
     // Set target of CoM task
     Eigen::Vector3d plannedComAccel = calcPlannedComAccel();
     Eigen::Vector3d nextPlannedCom;
-    complementCom_[0] = ctl().robot().com().x() - ctl().realRobot().com().x();
-    complementCom_[1] = ctl().robot().com().y() - ctl().realRobot().com().y();
+    complementCom_[0] = ctl().realRobot().com().x() - ctl().robot().com().x();
+    complementCom_[1] = ctl().realRobot().com().y() - ctl().robot().com().y();
     complementCom_[2] = 0;
 
 
     // PlanA
-    if((0 < t_) && (t_ < 1)){
+    // if((0 < t_) && (t_ < 1)){
       nextPlannedCom =
           mpcCom_ + ctl().dt() * mpcComVel_ + 0.5 * std::pow(ctl().dt(), 2) * plannedComAccel;
-    }
-    else{
-      nextPlannedCom = (mpcCom_ - complementCom_) + 
-                                          ctl().dt() * (mpcComVel_) +  //(ctl().realRobot().comVelocity() - ctl().robot().comVelocity())) + 
-                                          (0.5 * std::pow(ctl().dt(), 2) * plannedComAccel);
+    // }
+    // else{
+    //   nextPlannedCom = config().comControlGainP * (mpcCom_ + complementCom_) + 
+    //                                       ctl().dt() * (mpcComVel_) +  //(ctl().realRobot().comVelocity() - ctl().robot().comVelocity())) + 
+    //                                       (0.5 * std::pow(ctl().dt(), 2) * plannedComAccel);
 
-    }
+    // }
 
     // Improved for foward CoM
     // Eigen::Vector3d nextPlannedCom = (1 - config().comControlGainP)* mpcCom_ + config().comControlGainP * actualCom()
@@ -154,7 +154,7 @@ void CentroidalManager::update()
       nextPlannedComVel.z() = calcRefComZ(ctl().t(), 1) + ctl().footManager_->calcRefGroundPosZ(ctl().t(), 1);
       plannedComAccel.z() = calcRefComZ(ctl().t(), 2) + ctl().footManager_->calcRefGroundPosZ(ctl().t(), 2);
     }
-    ctl().comTask_->com(nextPlannedCom);
+    ctl().comTask_->com(nextPlannedCom + config().comControlGainP * (ctl().comTask_->com() - ctl().realRobot().com()));
     ctl().comTask_->refVel(nextPlannedComVel);
     ctl().comTask_->refAccel(plannedComAccel);
 
