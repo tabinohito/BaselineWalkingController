@@ -125,6 +125,13 @@ BaselineWalkingController::BaselineWalkingController(mc_rbdyn::RobotModulePtr rm
   // Setup anchor
   setDefaultAnchor();
 
+  // iceoryx initialization
+  iox::runtime::PoshRuntime::initRuntime(APP_NAME);
+  iox::capro::ServiceDescription serviceDescription("Radar", "FrontLeft", "Object");
+  iox::popo::PublisherOptions options;
+
+  publisher_ = std::make_shared<iox::popo::Publisher<RadarObject>>(serviceDescription, options);
+
   mc_rtc::log::success("[BaselineWalkingController] Constructed.");
 }
 
@@ -151,6 +158,38 @@ bool BaselineWalkingController::run()
 
   if(enableManagerUpdate_)
   {
+    // Update iceoryx
+    if(!iox::hasTerminationRequested())
+    {
+      // Retrieve a sample from shared memory
+      //! [loan]
+      auto loanResult = publisher_->loan();
+      //! [loan]
+      //! [publish]
+      if(loanResult.has_value())
+      {
+        auto & sample = loanResult.value();
+        // Sample can be held until ready to publish
+        sample->x = t_;
+        sample->y = t_;
+        sample->z = t_;
+        sample.publish();
+      }
+      //! [publish]
+      //! [error]
+      else
+      {
+        auto error = loanResult.error();
+        // Do something with error
+        std::cerr << "Unable to loan sample, error code: " << error << std::endl;
+      }
+      //! [error]
+
+      //! [msg]
+      std::cout << APP_NAME << " sent value: " << t_ << std::endl;
+      //! [msg]
+    }
+
     // Update managers
     footManager_->update();
     centroidalManager_->update();

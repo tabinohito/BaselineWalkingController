@@ -1,0 +1,49 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "${default}",
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "/home/irsl/workspace/src/catkin_data_ws/devel/include/**",
+                "/home/irsl/catkin_ws/devel/include/**",
+                "/opt/ros/noetic/include/**",
+                "/home/irsl/catkin_ws/src/backward_ros/include/**",
+                "/home/irsl/mc_rtc_ws/src/isri-aist/BaselineWalkingController/include/**",
+                "/home/irsl/mc_rtc_ws/src/isri-aist/CentroidalControlCollection/include/**",
+                "/home/irsl/catkin_ws/src/dynamixel/DynamixelSDK/ros/dynamixel_sdk/include/**",
+                "/home/irsl/catkin_ws/src/dynamixel/dynamixel-workbench/dynamixel_workbench_controllers/include/**",
+                "/home/irsl/catkin_ws/src/dynamixel/dynamixel-workbench/dynamixel_workbench_operators/include/**",
+                "/home/irsl/catkin_ws/src/dynamixel/dynamixel-workbench/dynamixel_workbench_toolbox/include/**",
+                "/home/irsl/catkin_ws/src/fanuc/fanuc_driver/include/**",
+                "/home/irsl/catkin_ws/src/navigation/humanoid_navigation/footstep_planner/include/**",
+                "/home/irsl/mc_rtc_ws/src/isri-aist/ForceControlCollection/include/**",
+                "/home/irsl/catkin_ws/src/navigation/humanoid_navigation/gridmap_2d/include/**",
+                "/home/irsl/catkin_ws/src/navigation/humanoid_navigation/humanoid_localization/include/**",
+                "/home/irsl/catkin_ws/src/navigation/humanoid_navigation/humanoid_planner_2d/include/**",
+                "/home/irsl/catkin_ws/src/mujoco/mc_mujoco_rosbridge/include/**",
+                "/home/irsl/catkin_ws/src/mujoco/mujoco_ros_pkgs/mujoco_ros/include/**",
+                "/home/irsl/catkin_ws/src/mujoco/mujoco_ros_pkgs/mujoco_ros_control/include/**",
+                "/home/irsl/catkin_ws/src/mujoco/mujoco_ros_pkgs/mujoco_ros_sensors/include/**",
+                "/home/irsl/mc_rtc_ws/src/isri-aist/NMPC/nmpc_ddp/include/**",
+                "/home/irsl/catkin_ws/src/msgs/jsk_common_msgs/posedetection_msgs/include/**",
+                "/home/irsl/mc_rtc_ws/src/isri-aist/QpSolverCollection/include/**",
+                "/home/irsl/catkin_ws/src/tactile_sensor_system/sim_force_tactile_sensor_viewer/include/**",
+                "/home/irsl/catkin_ws/src/tactile_sensor_system/sim_rf_tactile_sensor_viewer/include/**",
+                "/home/irsl/catkin_ws/src/tactile_sensor_system/tactile_sensor_system_client/include/**",
+                "/home/irsl/mc_rtc_ws/src/controller/TactileWalkingController/include/**",
+                "/home/irsl/catkin_ws/src/imu/timesync/include/**",
+                "/home/irsl/mc_rtc_ws/src/isri-aist/TrajectoryCollection/include/**",
+                "/usr/include/**",
+                "/usr/local/include/iceoryx/v"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}

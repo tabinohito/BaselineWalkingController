@@ -31,9 +31,19 @@ if(DEFINED CATKIN_DEVEL_PREFIX)
     centroidal_control_collection
   )
 
+
   # Eigen
   find_package(Eigen3 REQUIRED)
   include_directories(${EIGEN3_INCLUDE_DIR})
+
+  # iceoryx
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/iceoryx)
+  find_package(iceoryx_platform REQUIRED)
+  find_package(iceoryx_posh CONFIG REQUIRED)
+  find_package(iceoryx_hoofs CONFIG REQUIRED)
+  include(IceoryxPackageHelper)
+  include(IceoryxPlatform)
+  include(IceoryxPlatformSettings)
 
   catkin_package(
     CATKIN_DEPENDS

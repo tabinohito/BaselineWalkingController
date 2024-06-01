@@ -17,7 +17,13 @@ add_library(${CONTROLLER_NAME} SHARED
   swing/SwingTrajLandingSearch.cpp
   State.cpp
   )
-target_link_libraries(${CONTROLLER_NAME} PUBLIC mc_rtc::mc_control_fsm mc_rtc::mc_rtc_ros)
+  
+target_link_libraries(${CONTROLLER_NAME} PUBLIC 
+  mc_rtc::mc_control_fsm 
+  mc_rtc::mc_rtc_ros
+  iceoryx_posh::iceoryx_posh
+)
+
 
 if(DEFINED CATKIN_DEVEL_PREFIX)
   target_link_libraries(${CONTROLLER_NAME} PUBLIC ${catkin_LIBRARIES})
