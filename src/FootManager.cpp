@@ -540,9 +540,20 @@ std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcC
   for(const auto & foot : getCurrentContactFeet())
   {
     const auto & surface = ctl().robot().surface(surfaceName(foot));
+    auto contact_position = calcSurfaceVertexList(surface, sva::PTransformd::Identity());
+    
+    // ここでRosから得た情報を使ってcontact_positionを更新する
+    mc_rtc::log::info("[FootManager] Foot name: {}", std::to_string(foot));
+    // std::cout << "Foot name: " << std::to_string(foot) << std::endl;
+    // for(const auto & contact : contact_position)
+    // {
+    //   std::cout << "contact: " << contact.transpose() << std::endl;
+    // }
+    // std::cout << std::endl;
+
     contactList.emplace(
         foot, std::make_shared<ForceColl::SurfaceContact>(std::to_string(foot), config_.fricCoeff,
-                                                          calcSurfaceVertexList(surface, sva::PTransformd::Identity()),
+                                                          contact_position,
                                                           targetFootPoses_.at(foot)));
   }
 
