@@ -127,10 +127,10 @@ BaselineWalkingController::BaselineWalkingController(mc_rbdyn::RobotModulePtr rm
 
   // iceoryx initialization
   iox::runtime::PoshRuntime::initRuntime(APP_NAME);
-  iox::capro::ServiceDescription serviceDescription("Radar", "FrontLeft", "Object");
+  iox::capro::ServiceDescription serviceDescription("foot_info", "tactileInfo", "mc_rtc");
   iox::popo::PublisherOptions options;
 
-  publisher_ = std::make_shared<iox::popo::Publisher<RadarObject>>(serviceDescription, options);
+  publisher_ = std::make_shared<iox::popo::Publisher<tactileInfo>>(serviceDescription, options);
 
   mc_rtc::log::success("[BaselineWalkingController] Constructed.");
 }
@@ -158,38 +158,7 @@ bool BaselineWalkingController::run()
 
   if(enableManagerUpdate_)
   {
-    // Update iceoryx
-    if(!iox::hasTerminationRequested())
-    {
-      // Retrieve a sample from shared memory
-      //! [loan]
-      auto loanResult = publisher_->loan();
-      //! [loan]
-      //! [publish]
-      if(loanResult.has_value())
-      {
-        auto & sample = loanResult.value();
-        // Sample can be held until ready to publish
-        sample->x = t_;
-        sample->y = t_;
-        sample->z = t_;
-        sample.publish();
-      }
-      //! [publish]
-      //! [error]
-      else
-      {
-        auto error = loanResult.error();
-        // Do something with error
-        std::cerr << "Unable to loan sample, error code: " << error << std::endl;
-      }
-      //! [error]
-
-      //! [msg]
-      std::cout << APP_NAME << " sent value: " << t_ << std::endl;
-      //! [msg]
-    }
-
+    update_iceoryx();
     // Update managers
     footManager_->update();
     centroidalManager_->update();
@@ -229,4 +198,50 @@ void BaselineWalkingController::setDefaultAnchor()
     return sva::interpolate(robot.surfacePose(footManager_->surfaceName(Foot::Left)),
                             robot.surfacePose(footManager_->surfaceName(Foot::Right)), 0.5);
   });
+}
+
+void BaselineWalkingController::update_iceoryx()
+{
+  // Update iceoryx
+  if(!iox::hasTerminationRequested())
+  {
+    // Retrieve a sample from shared memory
+    //! [loan]
+    auto loanResult = publisher_->loan();
+    //! [loan]
+    //! [publish]
+    if(loanResult.has_value())
+    {
+      auto & sample = loanResult.value();
+      // Sample can be held until ready to publish
+
+      // Set the sample data timestamp
+      sample->time = t_;
+
+      // // last touch down foot
+      sample->left.force.x = robot().surfaceWrench(footManager_->surfaceName(Foot::Left)).force().x();
+      sample->left.force.y = robot().surfaceWrench(footManager_->surfaceName(Foot::Left)).force().y();
+      sample->left.force.z = robot().surfaceWrench(footManager_->surfaceName(Foot::Left)).force().z();
+
+      // last touch down foot
+      sample->left.torque.x = robot().surfaceWrench(footManager_->surfaceName(Foot::Left)).couple().x();
+      sample->left.torque.y = robot().surfaceWrench(footManager_->surfaceName(Foot::Left)).couple().y();
+      sample->left.torque.z = robot().surfaceWrench(footManager_->surfaceName(Foot::Left)).couple().z();
+
+      sample.publish();
+    }
+    //! [publish]
+    //! [error]
+    else
+    {
+      auto error = loanResult.error();
+      // Do something with error
+      // std::cerr << "Unable to loan sample, error code: " << error << std::endl;
+    }
+    //! [error]
+
+    //! [msg]
+    // std::cout << APP_NAME << " sent value: " << t_ << std::endl;
+    //! [msg]
+  }
 }

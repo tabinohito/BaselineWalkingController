@@ -25,12 +25,28 @@ class FootManager;
 class CentroidalManager;
 
 /** \brief RadarObject. */
-struct RadarObject
+struct foot_info
 {
-  double x = 0.0;
-  double y = 0.0;
-  double z = 0.0;
+  struct force
+  {
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+  } force;
+  struct torque
+  {
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+  } torque;
 };
+
+struct tactileInfo
+{
+  double time = 0.0;
+  foot_info left;
+  foot_info right;
+}; // namespace BWC
 
 /** \brief Humanoid walking controller with various baseline methods. */
 struct BaselineWalkingController : public mc_control::fsm::Controller
@@ -113,10 +129,13 @@ protected:
   double t_ = 0;
 
 private:
+  //! method to publish and subscribe communication
+  void update_iceoryx();
+
   //! Name of APP
   static constexpr char APP_NAME[] = "iox-cpp-publisher-helloworld";
 
-  //! Create a publisher for RadarObject
-  std::shared_ptr<iox::popo::Publisher<RadarObject>> publisher_ = nullptr;
+  //! Create a publisher for tactileInfo
+  std::shared_ptr<iox::popo::Publisher<tactileInfo>> publisher_ = nullptr;
 };
 } // namespace BWC
