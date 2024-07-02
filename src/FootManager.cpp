@@ -1240,5 +1240,9 @@ bool FootManager::detectTouchDown() const
     return false;
   }
 
-  return true;
+  mc_rtc::log::info("[FootManager] Touch down detected: foot={}, remainingDuration={}, posError={}, fz={}",
+                    static_cast<int>(swingFoot), touchDownRemainingDuration(),
+                    (swingTraj_->endPose_.translation() - swingTraj_->pose(ctl().t()).translation()).norm(), fz);
+
+    return true;
 }
