@@ -125,12 +125,14 @@ BaselineWalkingController::BaselineWalkingController(mc_rbdyn::RobotModulePtr rm
   // Setup anchor
   setDefaultAnchor();
 
+#ifdef USE_ICEORYX
   // iceoryx initialization
   iox::runtime::PoshRuntime::initRuntime(APP_NAME);
   iox::capro::ServiceDescription serviceDescription("foot_info", "tactileInfo", "mc_rtc");
   iox::popo::PublisherOptions options;
 
   publisher_ = std::make_shared<iox::popo::Publisher<tactileInfo>>(serviceDescription, options);
+#endif
 
   mc_rtc::log::success("[BaselineWalkingController] Constructed.");
 }
@@ -158,7 +160,9 @@ bool BaselineWalkingController::run()
 
   if(enableManagerUpdate_)
   {
+#ifdef USE_ICEORYX
     update_iceoryx();
+#endif
     // Update managers
     footManager_->update();
     centroidalManager_->update();
@@ -200,6 +204,7 @@ void BaselineWalkingController::setDefaultAnchor()
   });
 }
 
+#ifdef USE_ICEORYX
 void BaselineWalkingController::update_iceoryx()
 {
   // Update iceoryx
@@ -245,3 +250,4 @@ void BaselineWalkingController::update_iceoryx()
     //! [msg]
   }
 }
+#endif

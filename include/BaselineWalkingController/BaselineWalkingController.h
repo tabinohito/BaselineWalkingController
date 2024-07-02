@@ -4,9 +4,11 @@
 
 #include <BaselineWalkingController/FootTypes.h>
 
-#include "iceoryx_posh/popo/publisher.hpp"
-#include "iceoryx_posh/runtime/posh_runtime.hpp"
-#include "iox/signal_watcher.hpp"
+#ifdef USE_ICEORYX
+#  include "iceoryx_posh/popo/publisher.hpp"
+#  include "iceoryx_posh/runtime/posh_runtime.hpp"
+#  include "iox/signal_watcher.hpp"
+#endif
 
 namespace mc_tasks
 {
@@ -24,6 +26,7 @@ namespace BWC
 class FootManager;
 class CentroidalManager;
 
+#ifdef USE_ICEORYX
 /** \brief RadarObject. */
 struct foot_info
 {
@@ -46,7 +49,8 @@ struct tactileInfo
   double time = 0.0;
   foot_info left;
   foot_info right;
-}; // namespace BWC
+};
+#endif
 
 /** \brief Humanoid walking controller with various baseline methods. */
 struct BaselineWalkingController : public mc_control::fsm::Controller
@@ -128,6 +132,7 @@ protected:
   //! Current time [sec]
   double t_ = 0;
 
+#ifdef USE_ICEORYX
 private:
   //! method to publish and subscribe communication
   void update_iceoryx();
@@ -137,5 +142,7 @@ private:
 
   //! Create a publisher for tactileInfo
   std::shared_ptr<iox::popo::Publisher<tactileInfo>> publisher_ = nullptr;
+#endif
+
 };
 } // namespace BWC

@@ -12,6 +12,12 @@ set(CXX_DISABLE_WERROR ON)
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 option(INSTALL_DOCUMENTATION "Generate and install the documentation" OFF)
 
+option(USE_ICEORYX "Using iceoryx" ON)
+if(USE_ICEORYX)
+  message(STATUS "Using simulation environment")
+  add_definitions(-DUSE_ICEORYX)
+endif()
+
 include(cmake/base.cmake)
 project(baseline_walking_controller LANGUAGES CXX)
 
@@ -31,19 +37,20 @@ if(DEFINED CATKIN_DEVEL_PREFIX)
     centroidal_control_collection
   )
 
-
   # Eigen
   find_package(Eigen3 REQUIRED)
   include_directories(${EIGEN3_INCLUDE_DIR})
 
   # iceoryx
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/iceoryx)
-  find_package(iceoryx_platform REQUIRED)
-  find_package(iceoryx_posh CONFIG REQUIRED)
-  find_package(iceoryx_hoofs CONFIG REQUIRED)
-  include(IceoryxPackageHelper)
-  include(IceoryxPlatform)
-  include(IceoryxPlatformSettings)
+  if(USE_ICEORYX)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/iceoryx)
+    find_package(iceoryx_platform REQUIRED)
+    find_package(iceoryx_posh CONFIG REQUIRED)
+    find_package(iceoryx_hoofs CONFIG REQUIRED)
+    include(IceoryxPackageHelper)
+    include(IceoryxPlatform)
+    include(IceoryxPlatformSettings)
+  endif()
 
   catkin_package(
     CATKIN_DEPENDS

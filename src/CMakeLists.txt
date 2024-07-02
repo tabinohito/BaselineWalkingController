@@ -21,8 +21,13 @@ add_library(${CONTROLLER_NAME} SHARED
 target_link_libraries(${CONTROLLER_NAME} PUBLIC 
   mc_rtc::mc_control_fsm 
   mc_rtc::mc_rtc_ros
-  iceoryx_posh::iceoryx_posh
 )
+
+if(USE_ICEORYX)
+    target_link_libraries(${CONTROLLER_NAME} PUBLIC  
+        iceoryx_posh::iceoryx_posh
+    )
+endif()
 
 
 if(DEFINED CATKIN_DEVEL_PREFIX)
