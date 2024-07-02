@@ -10,6 +10,10 @@
 #  include "iox/signal_watcher.hpp"
 #endif
 
+#include <ros/ros.h>
+#include <ros/callback_queue.h>
+#include <std_msgs/Float32MultiArray.h>
+
 namespace mc_tasks
 {
 struct CoMTask;
@@ -132,8 +136,8 @@ protected:
   //! Current time [sec]
   double t_ = 0;
 
-#ifdef USE_ICEORYX
 private:
+#ifdef USE_ICEORYX
   //! method to publish and subscribe communication
   void update_iceoryx();
 
@@ -143,6 +147,8 @@ private:
   //! Create a publisher for tactileInfo
   std::shared_ptr<iox::popo::Publisher<tactileInfo>> publisher_ = nullptr;
 #endif
-
+  std::unique_ptr<ros::NodeHandle> nh_;
+  ros::CallbackQueue callbackQueue_;
+  ros::Subscriber contact_area_sub_;
 };
 } // namespace BWC
