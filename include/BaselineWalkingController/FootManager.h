@@ -260,7 +260,8 @@ public:
       \see FootManager::calcContactFootPoses
   */
   std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> calcCurrentContactList() const;
-
+  std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> calcCurrentContactList(
+      std::unordered_map<Foot, std::vector<Eigen::Vector3d>> sensor_contact_position) const;
   /** \brief Get the support ratio of left foot.
 
       1 for full left foot support, 0 for full right foot support.

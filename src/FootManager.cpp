@@ -533,7 +533,8 @@ std::set<Foot> FootManager::getCurrentContactFeet() const
   }
 }
 
-std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcCurrentContactList() const
+std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcCurrentContactList(
+    std::unordered_map<Foot, std::vector<Eigen::Vector3d>> sensor_contact_position) const
 {
   // Set contactList
   std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> contactList;
@@ -541,8 +542,13 @@ std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcC
   {
     const auto & surface = ctl().robot().surface(surfaceName(foot));
     auto contact_position = calcSurfaceVertexList(surface, sva::PTransformd::Identity());
-    
+
     // ここでRosから得た情報を使ってcontact_positionを更新する
+    // ノイズが乗るので、sensor_contact_positionは重ね合わせることも考慮する(処理をどこでやるかは要検討)
+    if(sensor_contact_position.find(foot) != sensor_contact_position.end())
+    {
+      contact_position = sensor_contact_position.at(foot);
+    }
     mc_rtc::log::info("[FootManager] Foot name: {}", std::to_string(foot));
     // std::cout << "Foot name: " << std::to_string(foot) << std::endl;
     // for(const auto & contact : contact_position)
@@ -551,9 +557,23 @@ std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcC
     // }
     // std::cout << std::endl;
 
+    contactList.emplace(foot, std::make_shared<ForceColl::SurfaceContact>(std::to_string(foot), config_.fricCoeff,
+                                                                          contact_position, targetFootPoses_.at(foot)));
+  }
+
+  return contactList;
+}
+
+std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcCurrentContactList() const
+{
+  // Set contactList
+  std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> contactList;
+  for(const auto & foot : getCurrentContactFeet())
+  {
+    const auto & surface = ctl().robot().surface(surfaceName(foot));
     contactList.emplace(
         foot, std::make_shared<ForceColl::SurfaceContact>(std::to_string(foot), config_.fricCoeff,
-                                                          contact_position,
+                                                          calcSurfaceVertexList(surface, sva::PTransformd::Identity()),
                                                           targetFootPoses_.at(foot)));
   }
 
@@ -1255,5 +1275,5 @@ bool FootManager::detectTouchDown() const
                     static_cast<int>(swingFoot), touchDownRemainingDuration(),
                     (swingTraj_->endPose_.translation() - swingTraj_->pose(ctl().t()).translation()).norm(), fz);
 
-    return true;
+  return true;
 }
