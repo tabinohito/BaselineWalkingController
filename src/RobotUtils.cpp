@@ -43,6 +43,8 @@ TaskGain::TaskGain(const mc_rtc::Configuration & mcRtcConfig)
   }
 }
 
+// ここですべての点をsurfaceOriginの座標系に変換している
+// つまりここもしくはこれを呼んでいるものでSensor baseの補正をかければいい
 std::vector<Eigen::Vector3d> BWC::calcSurfaceVertexList(const mc_rbdyn::Surface & surface,
                                                         const sva::PTransformd & surfaceOrigin)
 {
