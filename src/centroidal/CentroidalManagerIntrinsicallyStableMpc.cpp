@@ -101,8 +101,6 @@ CCC::IntrinsicallyStableMpc::RefData CentroidalManagerIntrinsicallyStableMpc::ca
       maxPos = maxPos.cwiseMax(pos.head<2>());
     }
   }
-  mc_rtc::log::info("[CentroidalManagerIntrinsicallyStableMpc] minPos: {} maxPos: {}", minPos.transpose(),
-                    maxPos.transpose());
   refData.zmp_limits[0] = minPos;
   refData.zmp_limits[1] = maxPos;
   return refData;
