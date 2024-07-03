@@ -173,6 +173,13 @@ void FootManager::reset()
           postureTask->posture()[ctl().robot().jointIndexByName(jointAngleKV.first)];
     }
   }
+
+  for(const auto & foot : Feet::Both)
+  {
+    sensor_max_contact_position_[foot].setZero();
+    sensor_min_contact_position_[foot].setZero();
+    sensor_touchDown_[foot] = false;
+  }
 }
 
 void FootManager::update()
@@ -359,7 +366,17 @@ void FootManager::addToLogger(mc_rtc::Logger & logger)
 
     logger.addLogEntry(config_.name + "_footTaskDamping_" + std::to_string(foot), this,
                        [this, foot]() -> const sva::MotionVecd & { return footTaskGains_.at(foot).damping; });
+
+    logger.addLogEntry(config_.name + "_sensor_contactMaxDist_" + std::to_string(foot), this,
+                       [this, foot]() -> const Eigen::Vector3d { return sensor_max_contact_position_.at(foot); });
+
+    logger.addLogEntry(config_.name + "_sensor_contactMinDist_" + std::to_string(foot), this,
+                       [this, foot]() -> const Eigen::Vector3d { return sensor_min_contact_position_.at(foot); });
+
+    logger.addLogEntry(config_.name + "_sensor_touchDown_" + std::to_string(foot), this,
+                       [this, foot]() -> bool { return sensor_touchDown_.at(foot); });
   }
+
   logger.addLogEntry(config_.name + "_swingTrajType", this,
                      [this]() -> std::string { return swingTraj_ ? swingTraj_->type() : "None"; });
 
@@ -373,6 +390,7 @@ void FootManager::addToLogger(mc_rtc::Logger & logger)
 
   logger.addLogEntry(config_.name + "_velMode", this,
                      [this]() -> std::string { return velModeData_.enabled_ ? "ON" : "OFF"; });
+
   logger.addLogEntry(config_.name + "_targetVel", this, [this]() { return velModeData_.targetVel_; });
 
   logger.addLogEntry(config_.name + "_touchDown", this, [this]() { return touchDown_; });
@@ -547,13 +565,12 @@ std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcC
     // ノイズが乗るので、sensor_contact_positionは重ね合わせることも考慮する(処理をどこでやるかは要検討)
     if(sensor_contact_position.find(foot) != sensor_contact_position.end())
     {
-      contact_position = sensor_contact_position.at(foot);
+      // contact_position = sensor_contact_position.at(foot);
     }
-    mc_rtc::log::info("[FootManager] Foot name: {}", std::to_string(foot));
     // std::cout << "Foot name: " << std::to_string(foot) << std::endl;
-    // for(const auto & contact : contact_position)
+    // for(const auto & point : surface.points())
     // {
-    //   std::cout << "contact: " << contact.transpose() << std::endl;
+    //   std::cout << "point: " << point.translation() << std::endl;
     // }
     // std::cout << std::endl;
 
@@ -571,9 +588,10 @@ std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcC
   for(const auto & foot : getCurrentContactFeet())
   {
     const auto & surface = ctl().robot().surface(surfaceName(foot));
-    contactList.emplace(foot, std::make_shared<ForceColl::SurfaceContact>(std::to_string(foot), config_.fricCoeff,
-                                                                          r(surface, sva::PTransformd::Identity()),
-                                                                          targetFootPoses_.at(foot)));
+    contactList.emplace(
+        foot, std::make_shared<ForceColl::SurfaceContact>(std::to_string(foot), config_.fricCoeff,
+                                                          calcSurfaceVertexList(surface, sva::PTransformd::Identity()),
+                                                          targetFootPoses_.at(foot)));
   }
 
   return contactList;

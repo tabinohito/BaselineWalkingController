@@ -262,6 +262,7 @@ public:
   std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> calcCurrentContactList() const;
   std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> calcCurrentContactList(
       std::unordered_map<Foot, std::vector<Eigen::Vector3d>> sensor_contact_position) const;
+
   /** \brief Get the support ratio of left foot.
 
       1 for full left foot support, 0 for full right foot support.
@@ -349,6 +350,38 @@ public:
   inline bool velModeEnabled() const
   {
     return velModeData_.enabled_;
+  }
+
+  /** \brief Set sensor based contact area.
+    \param sensor_contact_position sensor based contact position
+ */
+  void setSensordContactArea(std::unordered_map<Foot, std::vector<Eigen::Vector2d>> sensor_contact_position)
+  {
+    sensor_contact_position_ = sensor_contact_position;
+  }
+
+  /** \brief Set sensor touch down.
+      \param sensor_touch_down sensor touch down
+   */
+  void setSensorTouchDown(std::unordered_map<Foot, bool> sensor_touchDown)
+  {
+    sensor_touchDown_ = sensor_touchDown;
+  }
+
+  /** \brief Set sensor max contact position.
+      \param sensor_max_contact_position sensor max contact position
+   */
+  void setSensorMaxContactPosition(std::unordered_map<Foot, Eigen::Vector3d> sensor_max_contact_position)
+  {
+    sensor_max_contact_position_ = sensor_max_contact_position;
+  }
+
+  /** \brief Set sensor min contact position.
+      \param sensor_min_contact_position sensor min contact position
+   */
+  void setSensorMinContactPosition(std::unordered_map<Foot, Eigen::Vector3d> sensor_min_contact_position)
+  {
+    sensor_min_contact_position_ = sensor_min_contact_position;
   }
 
 protected:
@@ -450,5 +483,14 @@ protected:
 
   //! Whether to require updating impedance gains for foot tasks
   bool requireImpGainUpdate_ = true;
+
+  /** \brief Set sensor based contact area.
+    \param sensor_contact_position sensor based contact position
+ */
+
+  std::unordered_map<Foot, std::vector<Eigen::Vector2d>> sensor_contact_position_;
+  std::unordered_map<Foot, bool> sensor_touchDown_;
+  std::unordered_map<Foot, Eigen::Vector3d> sensor_max_contact_position_;
+  std::unordered_map<Foot, Eigen::Vector3d> sensor_min_contact_position_;
 };
 } // namespace BWC
