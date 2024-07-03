@@ -39,6 +39,14 @@ void TactileState::start(mc_control::fsm::Controller & _ctl)
   nh_->setCallbackQueue(&callbackQueue_);
   tactileSub_ = nh_->subscribe<std_msgs::Float32MultiArray>(tactileTopicName, 1, &TactileState::tactileCallback, this);
 
+  for(auto foot : feet)
+  {
+    contactArea_[foot].clear();
+    min_pose_[foot] = Eigen::Vector3d::Zero();
+    max_pose_[foot] = Eigen::Vector3d::Zero();
+    touchDown_[foot] = false;
+  }
+
   output("OK");
 }
 
@@ -53,11 +61,10 @@ bool TactileState::run(mc_control::fsm::Controller &)
   // Call ROS callback
   callbackQueue_.callAvailable(ros::WallDuration());
 
-  //   // Set target velocity
-  //   if(ctl().footManager_->velModeEnabled())
-  //   {
-  //     ctl().footManager_->setRelativeVel(targetVel_);
-  //   }
+  ctl().footManager_->setSensordContactArea(contactArea_);
+  ctl().footManager_->setSensorMinContactPosition(min_pose_);
+  ctl().footManager_->setSensorMaxContactPosition(max_pose_);
+  ctl().footManager_->setSensorTouchDown(touchDown_);
 
   return false;
 }
@@ -66,15 +73,18 @@ void TactileState::teardown(mc_control::fsm::Controller &) {}
 
 void TactileState::tactileCallback(const std_msgs::Float32MultiArray::ConstPtr & tactileMsg)
 {
-  mc_rtc::log::info("[TactileState] Tactile callback");
   for(auto foot : feet)
   {
     int footIndex_offset = foot == Foot::Left ? 0 : 9;
     auto tactileData = tactileMsg->data;
-    contactArea_[foot]["x_max"] = Eigen::Vector2d(tactileData[0 + footIndex_offset], tactileData[1 + footIndex_offset]);
-    contactArea_[foot]["x_min"] = Eigen::Vector2d(tactileData[2 + footIndex_offset], tactileData[3 + footIndex_offset]);
-    contactArea_[foot]["y_max"] = Eigen::Vector2d(tactileData[4 + footIndex_offset], tactileData[5 + footIndex_offset]);
-    contactArea_[foot]["y_min"] = Eigen::Vector2d(tactileData[6 + footIndex_offset], tactileData[7 + footIndex_offset]);
+    contactArea_[foot].push_back(Eigen::Vector2d(tactileData[0 + footIndex_offset], tactileData[1 + footIndex_offset]));
+    contactArea_[foot].push_back(Eigen::Vector2d(tactileData[2 + footIndex_offset], tactileData[3 + footIndex_offset]));
+    contactArea_[foot].push_back(Eigen::Vector2d(tactileData[4 + footIndex_offset], tactileData[5 + footIndex_offset]));
+    contactArea_[foot].push_back(Eigen::Vector2d(tactileData[6 + footIndex_offset], tactileData[7 + footIndex_offset]));
+
+    min_pose_[foot] = Eigen::Vector3d(tactileData[2 + footIndex_offset], tactileData[7 + footIndex_offset], -0.1065);
+    max_pose_[foot] = Eigen::Vector3d(tactileData[0 + footIndex_offset], tactileData[5 + footIndex_offset], -0.1065);
+
     touchDown_[foot] = tactileData[8 + footIndex_offset] ? true : false;
   }
 }

@@ -27,16 +27,16 @@ protected:
 
 protected:
   //! Relative min target foot contact pose (x [m], y [m])
-  Eigen::Vector2d min_pose_ = Eigen::Vector2d::Zero();
+  std::unordered_map<Foot, Eigen::Vector3d> min_pose_;
 
   //! Relative max target foot contact pose (x [m], y [m])
-  Eigen::Vector2d max_pose_ = Eigen::Vector2d::Zero();
+  std::unordered_map<Foot, Eigen::Vector3d> max_pose_;
 
   //! Sensor based detect touch down
   std::unordered_map<Foot, bool> touchDown_;
 
   //! 4 points of contact area　both foot
-  std::unordered_map<Foot, std::unordered_map<std::string, Eigen::Vector2d>> contactArea_;
+  std::unordered_map<Foot, std::vector<Eigen::Vector2d>> contactArea_;
 
   //! Tactile sensor name list
   std::array<Foot, 2> feet = {Foot::Left, Foot::Right};
