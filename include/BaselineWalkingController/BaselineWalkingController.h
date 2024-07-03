@@ -10,10 +10,6 @@
 #  include "iox/signal_watcher.hpp"
 #endif
 
-#include <ros/ros.h>
-#include <ros/callback_queue.h>
-#include <std_msgs/Float32MultiArray.h>
-
 namespace mc_tasks
 {
 struct CoMTask;
@@ -147,8 +143,5 @@ private:
   //! Create a publisher for tactileInfo
   std::shared_ptr<iox::popo::Publisher<tactileInfo>> publisher_ = nullptr;
 #endif
-  std::unique_ptr<ros::NodeHandle> nh_;
-  ros::CallbackQueue callbackQueue_;
-  ros::Subscriber contact_area_sub_;
 };
 } // namespace BWC
