@@ -12,7 +12,7 @@ set(CXX_DISABLE_WERROR ON)
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 option(INSTALL_DOCUMENTATION "Generate and install the documentation" OFF)
 
-option(USE_ICEORYX "Using iceoryx" ON)
+option(USE_ICEORYX "Using iceoryx" OFF)
 if(USE_ICEORYX)
   message(STATUS "Using simulation environment")
   add_definitions(-DUSE_ICEORYX)
