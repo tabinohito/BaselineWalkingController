@@ -87,19 +87,22 @@ void TactileState::tactileCallback(const std_msgs::Float32MultiArray::ConstPtr &
         touchDown = true;
       }
     }
-    
+
     if(!touchDown)
     {
-      contactArea_[foot].push_back(Eigen::Vector2d(tactileData[0 + footIndex_offset], tactileData[1 + footIndex_offset]));
-      contactArea_[foot].push_back(Eigen::Vector2d(tactileData[2 + footIndex_offset], tactileData[3 + footIndex_offset]));
-      contactArea_[foot].push_back(Eigen::Vector2d(tactileData[4 + footIndex_offset], tactileData[5 + footIndex_offset]));
-      contactArea_[foot].push_back(Eigen::Vector2d(tactileData[6 + footIndex_offset], tactileData[7 + footIndex_offset]));
+      contactArea_[foot].push_back(
+          Eigen::Vector2d(tactileData[0 + footIndex_offset], tactileData[1 + footIndex_offset]));
+      contactArea_[foot].push_back(
+          Eigen::Vector2d(tactileData[2 + footIndex_offset], tactileData[3 + footIndex_offset]));
+      contactArea_[foot].push_back(
+          Eigen::Vector2d(tactileData[4 + footIndex_offset], tactileData[5 + footIndex_offset]));
+      contactArea_[foot].push_back(
+          Eigen::Vector2d(tactileData[6 + footIndex_offset], tactileData[7 + footIndex_offset]));
 
-      min_pose_[foot] = Eigen::Vector3d(tactileData[2 + footIndex_offset], tactileData[7 + footIndex_offset], -0.1065);
-      max_pose_[foot] = Eigen::Vector3d(tactileData[0 + footIndex_offset], tactileData[5 + footIndex_offset], -0.1065);
+      min_pose_[foot] = Eigen::Vector3d(tactileData[2 + footIndex_offset], tactileData[7 + footIndex_offset], -0.097);
+      max_pose_[foot] = Eigen::Vector3d(tactileData[0 + footIndex_offset], tactileData[5 + footIndex_offset], -0.097);
     }
     touchDown_[foot] = tactileData[8 + footIndex_offset] ? true : false;
-
   }
 }
 
