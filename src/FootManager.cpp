@@ -571,30 +571,29 @@ std::set<Foot> FootManager::getCurrentContactFeet() const
 }
 
 std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> FootManager::calcCurrentContactList(
-    std::unordered_map<Foot, std::vector<Eigen::Vector3d>> sensor_contact_position) const
+    std::unordered_map<Foot, Eigen::Vector3d> min_contact,
+    std::unordered_map<Foot, Eigen::Vector3d> max_contact) const
 {
   // Set contactList
   std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> contactList;
+  auto surfaceOrigin = sva::PTransformd::Identity();
+
   for(const auto & foot : getCurrentContactFeet())
   {
     const auto & surface = ctl().robot().surface(surfaceName(foot));
-    auto contact_position = calcSurfaceVertexList(surface, sva::PTransformd::Identity());
-
-    // ここでRosから得た情報を使ってcontact_positionを更新する
-    // ノイズが乗るので、sensor_contact_positionは重ね合わせることも考慮する(処理をどこでやるかは要検討)
-    if(sensor_contact_position.find(foot) != sensor_contact_position.end())
+    std::vector<Eigen::Vector3d> localVertexList;
+    for(const auto & point : surface.points())
     {
-      // contact_position = sensor_contact_position.at(foot);
+      Eigen::Vector3d localPoint = point.translation();
+      localPoint.x() = std::clamp(localPoint.x(), min_contact[foot].x(), max_contact[foot].x());
+      localPoint.y() = std::clamp(localPoint.y(), min_contact[foot].y(), max_contact[foot].y());
+      sva::PTransformd pointPose = sva::PTransformd(point.rotation(), localPoint);
+      // Surface points are represented in body frame, not surface frame
+      localVertexList.push_back((pointPose * surface.X_b_s().inv() * surfaceOrigin).translation());
     }
-    // std::cout << "Foot name: " << std::to_string(foot) << std::endl;
-    // for(const auto & point : surface.points())
-    // {
-    //   std::cout << "point: " << point.translation() << std::endl;
-    // }
-    // std::cout << std::endl;
 
     contactList.emplace(foot, std::make_shared<ForceColl::SurfaceContact>(std::to_string(foot), config_.fricCoeff,
-                                                                          contact_position, targetFootPoses_.at(foot)));
+                                                                          localVertexList, targetFootPoses_.at(foot)));
   }
 
   return contactList;

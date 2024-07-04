@@ -261,7 +261,8 @@ public:
   */
   std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> calcCurrentContactList() const;
   std::unordered_map<Foot, std::shared_ptr<ForceColl::Contact>> calcCurrentContactList(
-      std::unordered_map<Foot, std::vector<Eigen::Vector3d>> sensor_contact_position) const;
+      std::unordered_map<Foot, Eigen::Vector3d> min_contact,
+      std::unordered_map<Foot, Eigen::Vector3d> max_contact) const;
 
   /** \brief Get the support ratio of left foot.
 
@@ -360,12 +361,28 @@ public:
     sensor_contact_position_ = sensor_contact_position;
   }
 
+  /** \brief get sensor based contact area.
+    \param sensor_contact_position sensor based contact position
+  */
+  std::unordered_map<Foot, std::vector<Eigen::Vector2d>> getSensorContactArea()
+  {
+    return sensor_contact_position_;
+  }
+
   /** \brief Set sensor touch down.
       \param sensor_touch_down sensor touch down
    */
   void setSensorTouchDown(std::unordered_map<Foot, bool> sensor_touchDown)
   {
     sensor_touchDown_ = sensor_touchDown;
+  }
+
+  /** \brief get sensor touch down.
+    \param sensor_touch_down sensor touch down
+  */
+  std::unordered_map<Foot, bool> getSensorTouchDown()
+  {
+    return sensor_touchDown_;
   }
 
   /** \brief Set sensor max contact position.
@@ -376,12 +393,28 @@ public:
     sensor_max_contact_position_ = sensor_max_contact_position;
   }
 
+  /** \brief get sensor max contact position.
+    \param sensor_max_contact_position sensor max contact position
+  */
+  std::unordered_map<Foot, Eigen::Vector3d> getSensorMaxContactPosition()
+  {
+    return sensor_max_contact_position_;
+  }
+
   /** \brief Set sensor min contact position.
       \param sensor_min_contact_position sensor min contact position
    */
   void setSensorMinContactPosition(std::unordered_map<Foot, Eigen::Vector3d> sensor_min_contact_position)
   {
     sensor_min_contact_position_ = sensor_min_contact_position;
+  }
+
+  /** \brief get sensor min contact position.
+    \param sensor_min_contact_position sensor min contact position
+  */
+  std::unordered_map<Foot, Eigen::Vector3d> getSensorMinContactPosition()
+  {
+    return sensor_min_contact_position_;
   }
 
 protected:
