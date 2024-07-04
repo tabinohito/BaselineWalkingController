@@ -101,7 +101,10 @@ void CentroidalManager::update()
     }
 
     // Convert ZMP to wrench and distribute
-    contactList_ = ctl().footManager_->calcCurrentContactList();
+    // contactList_ = ctl().footManager_->calcCurrentContactList();
+    contactList_ = ctl().footManager_->calcCurrentContactList(ctl().footManager_->getSensorMinContactPosition(),
+                                                              ctl().footManager_->getSensorMaxContactPosition());
+
     wrenchDist_ = std::make_shared<ForceColl::WrenchDistribution>(ForceColl::getContactVecFromMap(contactList_),
                                                                   config().wrenchDistConfig);
     Eigen::Vector3d comForWrenchDist = (config().useActualComForWrenchDist ? actualCom() : ctl().comTask_->com());
