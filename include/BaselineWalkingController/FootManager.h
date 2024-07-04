@@ -492,5 +492,7 @@ protected:
   std::unordered_map<Foot, bool> sensor_touchDown_;
   std::unordered_map<Foot, Eigen::Vector3d> sensor_max_contact_position_;
   std::unordered_map<Foot, Eigen::Vector3d> sensor_min_contact_position_;
+  std::unordered_map<Foot, Eigen::Vector3d> default_max_contact_position_;
+  std::unordered_map<Foot, Eigen::Vector3d> default_min_contact_position_;
 };
 } // namespace BWC

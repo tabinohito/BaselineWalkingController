@@ -179,6 +179,19 @@ void FootManager::reset()
     sensor_max_contact_position_[foot].setZero();
     sensor_min_contact_position_[foot].setZero();
     sensor_touchDown_[foot] = false;
+
+    // Surface のXmax, Xmin, Ymax, Ymin, Zmax, Zminを取得する
+    const auto & surface = ctl().robot().surface(surfaceName(foot));
+    for(const auto & point : surface.points())
+    {
+      Eigen::Vector3d localPoint = point.translation();
+      default_max_contact_position_[foot].x() = std::max(default_max_contact_position_[foot].x(), localPoint.x());
+      default_max_contact_position_[foot].y() = std::max(default_max_contact_position_[foot].y(), localPoint.y());
+      default_max_contact_position_[foot].z() = std::max(default_max_contact_position_[foot].z(), localPoint.z());
+      default_min_contact_position_[foot].x() = std::min(default_min_contact_position_[foot].x(), localPoint.x());
+      default_min_contact_position_[foot].y() = std::min(default_min_contact_position_[foot].y(), localPoint.y());
+      default_min_contact_position_[foot].z() = std::min(default_min_contact_position_[foot].z(), localPoint.z());
+    }
   }
 }
 
@@ -375,6 +388,12 @@ void FootManager::addToLogger(mc_rtc::Logger & logger)
 
     logger.addLogEntry(config_.name + "_sensor_touchDown_" + std::to_string(foot), this,
                        [this, foot]() -> bool { return sensor_touchDown_.at(foot); });
+
+    logger.addLogEntry(config_.name + "_sensor_defauldContactMaxDist_" + std::to_string(foot), this,
+                       [this, foot]() -> const Eigen::Vector3d { return default_max_contact_position_.at(foot); });
+
+    logger.addLogEntry(config_.name + "_sensor_defauldContactMinDist_" + std::to_string(foot), this,
+                       [this, foot]() -> const Eigen::Vector3d { return default_min_contact_position_.at(foot); });
   }
 
   logger.addLogEntry(config_.name + "_swingTrajType", this,
